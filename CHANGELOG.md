@@ -11,7 +11,10 @@ First release.
 - Six module styles — `square`, `rounded`, `dots`, `diamond`, `vertical` and
   `horizontal` — and six eye styles: `square`, `rounded`, `circle`, `leaf`,
   `pointy` and `module`, the last drawing the finder pattern out of individual
-  modules so a dotted code gets dotted eyes.
+  modules so a dotted code gets dotted eyes. The two eye styles with a front —
+  `leaf` and `pointy` — turn with the finder pattern they belong to, so each
+  eye aims at the corner of the symbol it sits in rather than all three
+  aiming the same way.
   The capsule and diamond styles, and the frame, are additions to the shapes
   commonly available in PHP.
 - One geometry, computed once in module units, driving four output formats:

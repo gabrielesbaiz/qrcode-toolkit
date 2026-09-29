@@ -100,3 +100,53 @@ it('still renders module eyes in every format', function (string $format): void 
 
     expect($payload)->not->toBeEmpty();
 })->with(['svg', 'png', 'pdf', 'eps']);
+
+it('turns an asymmetric eye so that each one faces its own corner', function (): void {
+    // finderOrigins() returns top-left, top-right, bottom-left in that order.
+    expect(EyeStyle::Pointy->quarterTurnsFor(0))->toBe(0)
+        ->and(EyeStyle::Pointy->quarterTurnsFor(1))->toBe(1)
+        ->and(EyeStyle::Pointy->quarterTurnsFor(2))->toBe(3)
+        ->and(EyeStyle::Leaf->quarterTurnsFor(1))->toBe(1);
+});
+
+it('leaves a symmetric eye alone', function (EyeStyle $style): void {
+    expect($style->isOriented())->toBeFalse()
+        ->and($style->quarterTurnsFor(1))->toBe(0)
+        ->and($style->quarterTurnsFor(2))->toBe(0);
+})->with([EyeStyle::Square, EyeStyle::Rounded, EyeStyle::Circle, EyeStyle::Module]);
+
+it('moves each radius one corner clockwise per quarter turn', function (): void {
+    expect(EyeStyle::turn([3.5, 0.0, 0.0, 0.0], 0))->toBe([3.5, 0.0, 0.0, 0.0])
+        ->and(EyeStyle::turn([3.5, 0.0, 0.0, 0.0], 1))->toBe([0.0, 3.5, 0.0, 0.0])
+        ->and(EyeStyle::turn([3.5, 0.0, 0.0, 0.0], 2))->toBe([0.0, 0.0, 3.5, 0.0])
+        ->and(EyeStyle::turn([3.5, 0.0, 0.0, 0.0], 3))->toBe([0.0, 0.0, 0.0, 3.5])
+        ->and(EyeStyle::turn([3.5, 0.0, 0.0, 0.0], 4))->toBe([3.5, 0.0, 0.0, 0.0]);
+});
+
+it('points each pointy eye at the corner of the symbol it sits in', function (): void {
+    $svg = Qr::make(content())->eyes('pointy')->margin(0)->toSvg();
+
+    preg_match('/fill-rule="evenodd" d="([^"]+)"/', $svg, $matches);
+
+    $path = $matches[1] ?? '';
+
+    // The top-left eye starts its outline part way along the top edge,
+    // because its rounded corner is the one it sits on.
+    expect($path)->toStartWith('M3.5 0L7 0')
+        // The top-right eye starts at its own left edge instead: its
+        // rounded corner has moved a quarter turn clockwise.
+        ->toContain('ZM18 0L21.5 0A3.5 3.5 0 0 1 25 3.5')
+        // And the bottom-left eye rounds the corner it sits on, too.
+        ->toContain('ZM0 18L7 18L7 25L3.5 25A3.5 3.5 0 0 1 0 21.5');
+});
+
+it('keeps all three eyes identical when the style is symmetric', function (): void {
+    $svg = Qr::make(content())->eyes('circle')->margin(0)->toSvg();
+
+    preg_match('/fill-rule="evenodd" d="([^"]+)"/', $svg, $matches);
+
+    // Three outer rings, three cut-outs, and every ring drawn the same way
+    // round: four arcs each, none of them a straight corner.
+    expect(substr_count($matches[1] ?? '', 'Z'))->toBe(6)
+        ->and(substr_count($matches[1] ?? '', 'L'))->toBe(0);
+});

@@ -80,6 +80,61 @@ enum EyeStyle: string
     }
 
     /**
+     * Determine whether the eye has a front.
+     *
+     * A circle looks the same whichever way round it is drawn, but a shape
+     * with a corner has to decide which way that corner faces. These ones
+     * turn with the finder pattern they belong to, so the point of each eye
+     * aims at the corner of the symbol it sits in rather than all three
+     * aiming the same way.
+     */
+    public function isOriented(): bool
+    {
+        return $this === self::Pointy || $this === self::Leaf;
+    }
+
+    /**
+     * Get the quarter turns clockwise for one finder pattern.
+     *
+     * The order is the one finderOrigins() returns: top-left, top-right,
+     * bottom-left. A symmetric style never turns, so the caller does not
+     * have to ask whether it should.
+     */
+    public function quarterTurnsFor(int $index): int
+    {
+        if (! $this->isOriented()) {
+            return 0;
+        }
+
+        return match ($index) {
+            1 => 1,   // top-right: a quarter turn clockwise
+            2 => 3,   // bottom-left: a quarter turn anticlockwise
+            default => 0,
+        };
+    }
+
+    /**
+     * Turn a radius list clockwise.
+     *
+     * A rectangle's radii are listed from the top-left corner clockwise, so
+     * one quarter turn moves each of them one place along: what was at the
+     * top left ends up at the top right.
+     *
+     * @param  array{0: float, 1: float, 2: float, 3: float}  $radii
+     * @return array{0: float, 1: float, 2: float, 3: float}
+     */
+    public static function turn(array $radii, int $quarterTurns): array
+    {
+        $turns = ($quarterTurns % 4 + 4) % 4;
+
+        for ($i = 0; $i < $turns; $i++) {
+            $radii = [$radii[3], $radii[0], $radii[1], $radii[2]];
+        }
+
+        return $radii;
+    }
+
+    /**
      * Determine whether the style draws nothing but axis-aligned rectangles.
      */
     public function isPureSquare(): bool

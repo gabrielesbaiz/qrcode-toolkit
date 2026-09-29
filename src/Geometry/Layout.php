@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gabrielesbaiz\QrcodeToolkit\Geometry;
 
+use Gabrielesbaiz\QrcodeToolkit\Enums\EyeStyle;
 use Gabrielesbaiz\QrcodeToolkit\Enums\ModuleStyle;
 use Gabrielesbaiz\QrcodeToolkit\Exceptions\QrException;
 use Gabrielesbaiz\QrcodeToolkit\Frame;
@@ -161,10 +162,18 @@ final class Layout
     {
         $rings = [];
 
-        foreach ($matrix->finderOrigins() as [$x, $y]) {
+        foreach ($matrix->finderOrigins() as $index => [$x, $y]) {
+            $turns = $options->eyes->quarterTurnsFor($index);
+
             $rings[] = [
-                'outer' => Shape::withRadii($ox + $x, $oy + $y, 7.0, 7.0, $options->eyes->outerRadii())->clampRadii(),
-                'cutout' => Shape::withRadii($ox + $x + 1, $oy + $y + 1, 5.0, 5.0, $options->eyes->cutoutRadii())->clampRadii(),
+                'outer' => Shape::withRadii(
+                    $ox + $x, $oy + $y, 7.0, 7.0,
+                    EyeStyle::turn($options->eyes->outerRadii(), $turns),
+                )->clampRadii(),
+                'cutout' => Shape::withRadii(
+                    $ox + $x + 1, $oy + $y + 1, 5.0, 5.0,
+                    EyeStyle::turn($options->eyes->cutoutRadii(), $turns),
+                )->clampRadii(),
             ];
         }
 
@@ -180,8 +189,11 @@ final class Layout
     {
         $pupils = [];
 
-        foreach ($matrix->finderOrigins() as [$x, $y]) {
-            $pupils[] = Shape::withRadii($ox + $x + 2, $oy + $y + 2, 3.0, 3.0, $options->eyes->pupilRadii())->clampRadii();
+        foreach ($matrix->finderOrigins() as $index => [$x, $y]) {
+            $pupils[] = Shape::withRadii(
+                $ox + $x + 2, $oy + $y + 2, 3.0, 3.0,
+                EyeStyle::turn($options->eyes->pupilRadii(), $options->eyes->quarterTurnsFor($index)),
+            )->clampRadii();
         }
 
         return $pupils;
