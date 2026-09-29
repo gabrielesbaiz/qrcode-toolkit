@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Gabrielesbaiz\QrcodeToolkit\Facades\Qr;
 
 /**
- * The README quotes real numbers. These are where they came from.
+ * The documentation site quotes real numbers. These are where they came from.
  */
 it('quotes the scannability report accurately', function (): void {
     $report = Qr::make('https://laravel.com')

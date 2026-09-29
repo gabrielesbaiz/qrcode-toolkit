@@ -27,9 +27,11 @@ say so in the pull request and we will look at it together.
   that cannot be decoded back to its input is not a style, it is a picture.
   `tests/Feature/ScanBackTest.php` is the file, and it renders at several sizes
   because the decoder is more size-sensitive than a real scanner.
-- Every example in the README is executed by
-  `tests/Feature/ReadmeExamplesTest.php`. If you change a documented sample,
-  change it there too, or the suite will tell you.
+- Every example on the documentation site is executed by
+  `tests/Feature/DocumentedExamplesTest.php`, and every figure it quotes by
+  `tests/Feature/DocumentedFiguresTest.php`. If you change a documented sample
+  or a documented number, change it there too, or the suite will tell you. The
+  site lives in `docs/`.
 
 ## Things worth knowing before you change the renderers
 

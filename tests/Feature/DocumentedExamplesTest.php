@@ -10,7 +10,7 @@ use Gabrielesbaiz\QrcodeToolkit\Renderers\PngRenderer;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * The README promises these work. This file is why that promise holds.
+ * The documentation site promises these work. This file is why that promise holds.
  */
 it('runs the quick start examples', function (): void {
     expect(Qr::make('https://laravel.com')->toSvg())->toContain('<svg');
