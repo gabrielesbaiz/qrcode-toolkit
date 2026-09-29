@@ -1,0 +1,13 @@
+parameters:
+    level: max
+    paths:
+        - src
+    tmpDir: build/phpstan
+    treatPhpDocTypesAsCertain: false
+
+    # config/qrcode-toolkit.php is deliberately not analysed. Larastan's
+    # noEnvCallsOutsideOfConfig rule recognises only the host application's
+    # config directory, so it flags every env() call in a package config
+    # file -- where env() is both correct and universal, because the value
+    # is baked in when the consuming application caches its config. The
+    # file itself is a literal array with no logic to analyse.
