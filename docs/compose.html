@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Compose a QR code from every option the qrcode-toolkit package takes, and copy the PHP that produces it.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%23101010%27/%3E%3Cg fill=%27%23ffd400%27%3E%3Crect x=%274%27 y=%274%27 width=%278%27 height=%278%27/%3E%3Crect x=%2720%27 y=%274%27 width=%278%27 height=%278%27/%3E%3Crect x=%274%27 y=%2720%27 width=%278%27 height=%278%27/%3E%3Crect x=%2716%27 y=%2716%27 width=%274%27 height=%274%27/%3E%3Crect x=%2724%27 y=%2720%27 width=%274%27 height=%274%27/%3E%3Crect x=%2720%27 y=%2724%27 width=%274%27 height=%274%27/%3E%3C/g%3E%3C/svg%3E">
+<title>QR Composer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="compose.css">
+</head>
+<body>
+<header id="top">
+  <div class="mx bar">
+    <a class="brand" href="https://gabrielesbaiz.github.io/qrcode-toolkit/"><span class="glyph" aria-hidden="true"></span>QrcodeToolkit</a>
+    <span class="pill">v1.0.0</span>
+    <span class="spacer"></span>
+    <a class="iconbtn" href="https://gabrielesbaiz.github.io/qrcode-toolkit/" style="text-decoration:none">Documentation</a>
+    <button class="iconbtn" id="tbtn">Dark</button>
+  </div>
+</header>
+<div class="hazard" aria-hidden="true"></div>
+
+<div class="mx intro">
+  <div class="eyebrow">Composer</div>
+  <h1>Turn the knobs.<br>Take the <span class="mark">code</span>.</h1>
+  <p class="lede">Every option the package takes, wired to a live symbol and to the PHP that produces it.
+  The encoder and the SVG writer here are ports of the ones in the package, checked against them
+  <b>byte for byte</b> — what you see is what <code>Qr::make()</code> writes on your server.</p>
+</div>
+
+<div class="mx work">
+
+  <!-- ============ controls ============ -->
+  <div>
+    <details class="group" open>
+      <summary>Content <span class="count" id="c-content"></span></summary>
+      <div class="groupbody">
+        <div class="field">
+          <label for="payload">Payload helper</label>
+          <select id="payload">
+            <option value="raw">Raw text — whatever you type</option>
+            <option value="url">url() — a link</option>
+            <option value="wifi">wifi() — join a network</option>
+            <option value="vcard">vcard() — a contact card</option>
+            <option value="mecard">vcard(mecard: true) — the shorter card</option>
+            <option value="email">email() — mailto:</option>
+            <option value="phone">phone() — tel:</option>
+            <option value="sms">sms() — SMSTO:</option>
+            <option value="geo">geo() — a place</option>
+            <option value="calendar">calendar() — an event</option>
+            <option value="otpauth">otpauth() — two-factor enrolment</option>
+            <option value="epc">epc() — SEPA EPC QR</option>
+          </select>
+          <p class="hint" id="payload-hint">The string below is encoded exactly as it stands.</p>
+        </div>
+        <div class="field">
+          <label for="content">Encoded string</label>
+          <textarea id="content" spellcheck="false">https://laravel.com/docs/12.x/packages</textarea>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="ecc">Error correction</label>
+            <div class="seg" id="ecc" role="group" aria-label="Error correction">
+              <button type="button" data-v="L">L</button>
+              <button type="button" data-v="M">M</button>
+              <button type="button" data-v="Q">Q</button>
+              <button type="button" data-v="H">H</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="version">Symbol version</label>
+            <select id="version"><option value="">automatic</option></select>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="group" open>
+      <summary>Shapes <span class="count" id="c-shapes"></span></summary>
+      <div class="groupbody">
+        <div class="field">
+          <label>Module shape</label>
+          <div class="seg" id="modules" role="group" aria-label="Module shape">
+            <button type="button" data-v="square">square</button>
+            <button type="button" data-v="rounded">rounded</button>
+            <button type="button" data-v="dots">dots</button>
+            <button type="button" data-v="diamond">diamond</button>
+            <button type="button" data-v="vertical">vertical</button>
+            <button type="button" data-v="horizontal">horizontal</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="moduleScale">Module scale</label>
+          <div class="sliderrow">
+            <input type="range" id="moduleScale" min="0.1" max="1" step="0.05" value="1">
+            <span class="valuebox" id="moduleScale-v">1.00</span>
+          </div>
+          <p class="hint">How much of its cell a module fills. Below 0.65 the report turns cautious;
+          below 0.45 it calls the code risky.</p>
+        </div>
+        <div class="field">
+          <label>Eye shape</label>
+          <div class="seg" id="eyes" role="group" aria-label="Eye shape">
+            <button type="button" data-v="square">square</button>
+            <button type="button" data-v="rounded">rounded</button>
+            <button type="button" data-v="circle">circle</button>
+            <button type="button" data-v="leaf">leaf</button>
+            <button type="button" data-v="pointy">pointy</button>
+            <button type="button" data-v="module">module</button>
+          </div>
+          <p class="hint"><code>leaf</code> and <code>pointy</code> turn with the finder they belong to,
+          so each eye aims at its own corner. <code>module</code> draws the eye out of the module shape.</p>
+        </div>
+      </div>
+    </details>
+
+    <details class="group" open>
+      <summary>Colour <span class="count" id="c-colour"></span></summary>
+      <div class="groupbody">
+        <div class="row">
+          <div class="field">
+            <label for="foreground">Foreground</label>
+            <div class="swatchrow">
+              <input type="color" id="foreground-p" value="#000000" aria-label="Foreground colour">
+              <input type="text" id="foreground" value="#000000" spellcheck="false">
+            </div>
+          </div>
+          <div class="field">
+            <label for="background">Background</label>
+            <div class="swatchrow">
+              <input type="color" id="background-p" value="#ffffff" aria-label="Background colour">
+              <input type="text" id="background" value="#ffffff" spellcheck="false">
+            </div>
+            <label class="check"><input type="checkbox" id="transparent"> transparent</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="check"><input type="checkbox" id="useGradient"> Gradient across the symbol</label>
+        </div>
+        <div id="gradientBox" hidden>
+          <div class="row">
+            <div class="field">
+              <label for="gFrom">From</label>
+              <div class="swatchrow">
+                <input type="color" id="gFrom-p" value="#4338ca" aria-label="Gradient start">
+                <input type="text" id="gFrom" value="#4338ca" spellcheck="false">
+              </div>
+            </div>
+            <div class="field">
+              <label for="gTo">To</label>
+              <div class="swatchrow">
+                <input type="color" id="gTo-p" value="#be185d" aria-label="Gradient end">
+                <input type="text" id="gTo" value="#be185d" spellcheck="false">
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:.7rem">
+            <div class="field">
+              <label>Type</label>
+              <div class="seg" id="gType" role="group" aria-label="Gradient type">
+                <button type="button" data-v="linear">linear</button>
+                <button type="button" data-v="radial">radial</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="gAngle">Angle</label>
+              <div class="sliderrow">
+                <input type="range" id="gAngle" min="0" max="360" step="1" value="45">
+                <span class="valuebox" id="gAngle-v">45&deg;</span>
+              </div>
+              <p class="hint">Any angle, not four presets. A radial gradient ignores it.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="check"><input type="checkbox" id="perEye"> A colour per finder pattern</label>
+          <p class="hint">Off, the three eyes take one ring colour and one pupil colour.
+          On, each of the three is addressed separately.</p>
+        </div>
+        <div id="eyeOne">
+          <div class="row">
+            <div class="field">
+              <label for="eyeColor">Eye ring</label>
+              <div class="swatchrow">
+                <input type="color" id="eyeColor-p" value="#000000" aria-label="Eye ring colour">
+                <input type="text" id="eyeColor" placeholder="inherits the foreground" spellcheck="false">
+              </div>
+            </div>
+            <div class="field">
+              <label for="eyeInnerColor">Eye pupil</label>
+              <div class="swatchrow">
+                <input type="color" id="eyeInnerColor-p" value="#000000" aria-label="Eye pupil colour">
+                <input type="text" id="eyeInnerColor" placeholder="inherits the ring" spellcheck="false">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="eyeThree" hidden></div>
+      </div>
+    </details>
+
+    <details class="group">
+      <summary>Logo <span class="count" id="c-logo"></span></summary>
+      <div class="groupbody">
+        <div class="field">
+          <label for="logoFile">Image</label>
+          <input type="file" id="logoFile" accept="image/png,image/jpeg,image/gif,image/webp">
+          <p class="hint">Read in your browser and never uploaded anywhere. On the server the package
+          takes a local path or a base64 data URI, runs twelve checks over it, and raises the error
+          correction to <code>H</code> because the logo erases modules.</p>
+        </div>
+        <button type="button" class="btn ghost" id="logoClear" hidden>Remove the logo</button>
+        <div class="row">
+          <div class="field">
+            <label for="logoSize">Size</label>
+            <div class="sliderrow">
+              <input type="range" id="logoSize" min="0.05" max="0.3" step="0.01" value="0.2">
+              <span class="valuebox" id="logoSize-v">0.20</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="logoPadding">Padding</label>
+            <div class="sliderrow">
+              <input type="range" id="logoPadding" min="0" max="4" step="0.25" value="0">
+              <span class="valuebox" id="logoPadding-v">0</span>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="logoBackground">Plate behind it</label>
+          <div class="swatchrow">
+            <input type="color" id="logoBackground-p" value="#ffffff" aria-label="Logo plate colour">
+            <input type="text" id="logoBackground" placeholder="none" spellcheck="false">
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="group">
+      <summary>Caption and frame <span class="count" id="c-extras"></span></summary>
+      <div class="groupbody">
+        <div class="field">
+          <label for="label">Caption</label>
+          <input type="text" id="label" placeholder="nothing under the code" spellcheck="false">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="labelSize">Caption size</label>
+            <div class="sliderrow">
+              <input type="range" id="labelSize" min="6" max="48" step="1" value="16">
+              <span class="valuebox" id="labelSize-v">16</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="labelColor">Caption colour</label>
+            <div class="swatchrow">
+              <input type="color" id="labelColor-p" value="#000000" aria-label="Caption colour">
+              <input type="text" id="labelColor" value="#000000" spellcheck="false">
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="useFrame"> Frame around the whole canvas</label>
+        </div>
+        <div id="frameBox" hidden>
+          <div class="row">
+            <div class="field">
+              <label for="frameColor">Colour</label>
+              <div class="swatchrow">
+                <input type="color" id="frameColor-p" value="#111827" aria-label="Frame colour">
+                <input type="text" id="frameColor" value="#111827" spellcheck="false">
+              </div>
+            </div>
+            <div class="field">
+              <label for="frameWidth">Width</label>
+              <div class="sliderrow">
+                <input type="range" id="frameWidth" min="0.25" max="8" step="0.25" value="1">
+                <span class="valuebox" id="frameWidth-v">1.00</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="frameRadius">Corner radius</label>
+              <div class="sliderrow">
+                <input type="range" id="frameRadius" min="0" max="10" step="0.5" value="0">
+                <span class="valuebox" id="frameRadius-v">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="group">
+      <summary>Canvas <span class="count" id="c-canvas"></span></summary>
+      <div class="groupbody">
+        <div class="row">
+          <div class="field">
+            <label for="size">Output width</label>
+            <div class="sliderrow">
+              <input type="range" id="size" min="64" max="1024" step="8" value="300">
+              <span class="valuebox" id="size-v">300</span>
+            </div>
+            <p class="hint">Pixels across, the quiet zone and the frame included.</p>
+          </div>
+          <div class="field">
+            <label for="margin">Quiet zone</label>
+            <div class="sliderrow">
+              <input type="range" id="margin" min="0" max="16" step="1" value="4">
+              <span class="valuebox" id="margin-v">4</span>
+            </div>
+            <p class="hint">In modules. Four is what the specification asks for.</p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="printWidth">Printed width, for the report</label>
+          <div class="sliderrow">
+            <input type="range" id="printWidth" min="10" max="200" step="1" value="40">
+            <span class="valuebox" id="printWidth-v">40 mm</span>
+          </div>
+        </div>
+        <div class="field">
+          <button type="button" class="btn ghost" id="reset">Back to the defaults</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============ preview, report, code ============ -->
+  <div class="side">
+    <div class="plate">
+      <div class="stage" id="stage"></div>
+      <p class="cap"><span id="cap-size">&nbsp;</span><span id="cap-mode"></span></p>
+    </div>
+
+    <div id="blocked" hidden></div>
+
+    <div class="report" id="report"></div>
+
+    <div class="out">
+      <div class="tabs" role="tablist" id="tabs">
+        <button role="tab" data-t="builder" aria-selected="true">Builder</button>
+        <button role="tab" data-t="profile" aria-selected="false">Config profile</button>
+        <button role="tab" data-t="blade" aria-selected="false">Blade</button>
+        <button role="tab" data-t="artisan" aria-selected="false">Artisan</button>
+        <button role="tab" data-t="svg" aria-selected="false">SVG</button>
+      </div>
+      <pre id="code"><code></code></pre>
+      <div class="outfoot">
+        <button class="btn" id="copy">Copy</button>
+        <button class="btn ghost" id="download">Download the SVG</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mx">
+  <p class="note"><b>What this is not.</b> PNG, PDF and EPS come out of the same geometry on the
+  server, but only SVG can be drawn here, so the preview is the SVG one. The logo you pick is read
+  in your browser and inlined; the package would run it through its twelve checks first and refuse
+  a remote URL, a stream wrapper, a MIME mismatch or a decompression bomb. Everything else &mdash;
+  the matrix, the shapes, the colours, the report &mdash; is the package's own code, ported and
+  checked against it.</p>
+</div>
+
+<script src="compose.js"></script>
+</body>
+</html>

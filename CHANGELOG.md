@@ -8,6 +8,13 @@ First release.
 
 ### Added
 
+- A documentation site, and a **QR Composer** on it: every option wired to a
+  symbol that redraws as you move it, a live scannability report, and the
+  builder chain, config profile, Blade tag and Artisan command it would take to
+  produce what you see. Its encoder and SVG writer are ports of this package's,
+  checked against them over 205 matrices and 131 option combinations, and the
+  PHP it writes is run back through the package to confirm it renders the same
+  bytes.
 - Six module styles — `square`, `rounded`, `dots`, `diamond`, `vertical` and
   `horizontal` — and six eye styles: `square`, `rounded`, `circle`, `leaf`,
   `pointy` and `module`, the last drawing the finder pattern out of individual

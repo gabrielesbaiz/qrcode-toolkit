@@ -16,8 +16,8 @@ A QR code generator for Laravel that tells you what your styling costs — `dots
 ### 📖 [Read the documentation →](https://gabrielesbaiz.github.io/qrcode-toolkit/)
 
 Every module shape, eye shape, gradient, payload and output format with a
-working example beside the code it produces, the full option reference, and the
-comparison table that says when to reach for something else.
+working example beside the code it produces, the full option reference, and a
+composer that turns every option into a live code and the PHP that writes it.
 
 > [!IMPORTANT]
 > A ⭐ costs you nothing and helps other developers find this package.
@@ -86,6 +86,7 @@ Every flag is on the
 | | |
 |---|---|
 | [Documentation site](https://gabrielesbaiz.github.io/qrcode-toolkit/) | Everything: install, configure, style, operate. |
+| [QR Composer](https://gabrielesbaiz.github.io/qrcode-toolkit/compose.html) | Every option, wired to a live symbol and to the PHP that produces it. |
 | [Quick start](https://gabrielesbaiz.github.io/qrcode-toolkit/#/quickstart) | From `composer require` to a styled code. |
 | [Styling](https://gabrielesbaiz.github.io/qrcode-toolkit/#/styling) | Every shape, colour, gradient, logo and frame, with the output beside it. |
 | [Payloads](https://gabrielesbaiz.github.io/qrcode-toolkit/#/payloads) | All twelve helpers and the exact string each one encodes. |

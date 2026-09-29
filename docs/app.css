@@ -76,18 +76,9 @@ code{font-family:var(--mono);font-size:.88em}
 #nav a.sponsor{color:var(--accent-text)}
 @media(max-width:900px){#nav{display:none}}
 
-/* ---------- menu panel ---------- */
-#menupanel{position:fixed;inset:0;z-index:70;display:none;background:rgba(8,8,6,.5)}
-#menupanel.open{display:block}
-.panelbox{max-width:52rem;margin:0 auto;background:var(--paper);border:1px solid var(--rule);
-  border-top:0;padding:1.4rem clamp(1.1rem,3vw,2rem) 1.8rem;max-height:86vh;overflow:auto}
-.panelbody{display:grid;gap:1.4rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
-@media(max-width:640px){.mlabel{display:none}}
 .iconbtn{background:var(--wash);border:1px solid var(--rule);padding:.32rem .5rem;cursor:pointer;
   color:var(--muted);font-family:var(--mono);font-size:.68rem;display:flex;align-items:center;gap:.4rem}
 .iconbtn:hover{border-color:var(--accent-text);color:var(--ink)}
-/* Always present, because it is the way to the other twelve pages. */
-#menubtn{display:flex}
 #progress{position:absolute;inset:auto auto -1px 0;height:2px;width:0;background:var(--accent)}
 
 /* ---------- palette ---------- */
@@ -195,9 +186,36 @@ td.n{color:var(--muted)}
   white-space:pre-wrap;overflow-wrap:anywhere;max-height:6.5rem;overflow:hidden}
 
 
-.caveat{margin:1.6rem 0 0;display:grid;gap:.9rem;border-left:3px solid var(--accent);padding:.1rem 0 .1rem 1.1rem}
-.caveat p{margin:0;max-width:64ch;font-size:.9rem;line-height:1.62;color:var(--muted)}
-.caveat b{color:var(--ink)}
+
+/* ---------- the composer section, and the link to it ---------- */
+.composer-cta{
+  margin-top:1.6rem; border:1px solid var(--rule); background:var(--wash);
+  padding:clamp(1.1rem,2.6vw,1.8rem); display:grid; gap:1.2rem; align-items:center;
+  position:relative; overflow:hidden;
+}
+@media(min-width:820px){ .composer-cta{grid-template-columns:minmax(0,1fr) auto} }
+.composer-cta::before{
+  content:''; position:absolute; inset:0 auto 0 0; width:5px;
+  background:repeating-linear-gradient(-45deg,var(--accent) 0 8px,transparent 8px 16px),var(--ink);
+}
+.composer-cta > div{padding-left:.8rem}
+.composer-cta h3{
+  margin:0 0 .4rem; font-family:var(--poster); font-size:1.15rem; letter-spacing:-.01em;
+}
+.composer-cta p{margin:0; max-width:56ch; font-size:.92rem; color:var(--sub)}
+.bigbtn{
+  display:inline-block; white-space:nowrap; text-decoration:none;
+  font-family:var(--mono); font-size:.78rem; letter-spacing:.04em;
+  background:var(--ink); color:var(--paper); border:2px solid var(--ink);
+  padding:.75rem 1.1rem;
+}
+.bigbtn:hover{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+
+/* A nav entry that leaves the documentation shell for the tool. */
+#nav a.offsite,#sidenav a.offsite{position:relative}
+#nav a.offsite::after,#sidenav a.offsite::after{
+  content:'\2197'; font-size:.8em; margin-left:.25em; color:var(--accent-text);
+}
 
 /* ---------- landing ---------- */
 #p-home section{padding-block:clamp(2.6rem,6vw,5rem);border-top:1px solid var(--rule)}

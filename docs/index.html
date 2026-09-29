@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -21,7 +22,6 @@
     <span class="pill">v1.0.0</span>
     <span class="spacer"></span>
     <nav id="nav" aria-label="Documentation"></nav>
-    <button class="iconbtn" id="menubtn" aria-label="All pages" aria-expanded="false">☰ <span class="mlabel">All pages</span></button>
     <button class="iconbtn" id="sbtn" aria-label="Search">
       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.5" stroke="currentColor"/><path d="M10.5 10.5 14 14" stroke="currentColor" stroke-linecap="round"/></svg>
       Search <span id="skey">⌘K</span>
@@ -31,16 +31,15 @@
   <div id="progress"></div>
 </header>
 
-<div id="menupanel" aria-label="All pages">
-  <div class="panelbox"><div class="panelbody"></div></div>
-</div>
-
 <div id="pal" role="dialog" aria-modal="true" aria-label="Search">
   <div class="box">
     <input id="pq" placeholder="Jump to a page or a section…" autocomplete="off" spellcheck="false">
     <ul id="pl" role="listbox"></ul>
   </div>
 </div>
+
+<main id="main"></main>
+
 
 <main id="main"></main>
 
