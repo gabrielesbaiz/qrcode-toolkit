@@ -128,13 +128,13 @@ it('decodes each payload helper', function (string $method, array $arguments): v
 
     expectDecodable(fn (int $size): string => $builder->size($size)->toPng(), $expected);
 })->with([
-    'url' => ['url', ['https://sbaiz.com/hello']],
+    'url' => ['url', ['https://laravel.com/docs']],
     'wifi' => ['wifi', ['Office', 'sup3rsecret']],
-    'email' => ['email', ['gabriele@example.com', 'Hello']],
+    'email' => ['email', ['mario.rossi@example.com', 'Hello']],
     'phone' => ['phone', ['+39 333 1234567']],
     'sms' => ['sms', ['+393331234567', 'On my way']],
     'geo' => ['geo', [46.0693, 13.2358]],
-    'epc' => ['epc', ['NoviasNet', 'IT60X0542811101000000123456', 12.30, 'Invoice 42']],
+    'epc' => ['epc', ['Acme S.r.l.', 'IT60X0542811101000000123456', 12.30, 'Invoice 42']],
 ]);
 
 it('decodes a code at the smallest size the report calls printable', function (): void {

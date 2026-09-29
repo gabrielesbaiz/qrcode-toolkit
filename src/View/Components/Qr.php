@@ -15,7 +15,7 @@ use Illuminate\View\ComponentAttributeBag;
 /**
  * Render a QR code as inline SVG.
  *
- *   <x-qr data="https://sbaiz.com" />
+ *   <x-qr data="https://laravel.com" />
  *   <x-qr :data="$order->url" profile="ticket" size="240" label="{{ $order->code }}" />
  *   <x-qr :data="$url" modules="dots" gradient-from="#4338ca" gradient-to="#be185d" frame />
  *

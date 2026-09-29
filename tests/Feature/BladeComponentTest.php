@@ -17,7 +17,7 @@ function render(string $template, array $data = []): string
 }
 
 it('renders inline SVG inside a wrapper', function (): void {
-    $html = render('<x-qr data="https://sbaiz.com" />');
+    $html = render('<x-qr data="https://laravel.com" />');
 
     expect($html)->toContain('<svg')
         ->toContain('class="qrcode-toolkit"')
@@ -25,18 +25,18 @@ it('renders inline SVG inside a wrapper', function (): void {
 });
 
 it('renders without a wrapper when bare', function (): void {
-    $html = trim(render('<x-qr data="https://sbaiz.com" bare />'));
+    $html = trim(render('<x-qr data="https://laravel.com" bare />'));
 
     expect($html)->toStartWith('<?xml')->not->toContain('<span');
 });
 
 it('renders an img when asked', function (): void {
-    expect(render('<x-qr data="https://sbaiz.com" img />'))
+    expect(render('<x-qr data="https://laravel.com" img />'))
         ->toContain('<img ')->toContain('data:image/svg+xml;base64,');
 });
 
 it('maps every simple attribute onto its option', function (): void {
-    $component = new QrComponent(data: 'https://sbaiz.com');
+    $component = new QrComponent(data: 'https://laravel.com');
     $component->withAttributes([
         'size' => '480',
         'margin' => '2',
@@ -63,7 +63,7 @@ it('maps every simple attribute onto its option', function (): void {
 });
 
 it('maps dashed attributes onto nested options', function (): void {
-    $component = new QrComponent(data: 'https://sbaiz.com');
+    $component = new QrComponent(data: 'https://laravel.com');
     $component->withAttributes([
         'gradient-from' => '#4338ca',
         'gradient-to' => '#be185d',
@@ -85,47 +85,47 @@ it('maps dashed attributes onto nested options', function (): void {
 });
 
 it('treats a bare frame attribute as the default frame', function (): void {
-    $component = new QrComponent(data: 'https://sbaiz.com', frame: true);
+    $component = new QrComponent(data: 'https://laravel.com', frame: true);
     $component->withAttributes([]);
 
     expect($component->builder()->options()->frame)->not->toBeNull();
 });
 
 it('treats a bare transparent attribute as a null background', function (): void {
-    $component = new QrComponent(data: 'https://sbaiz.com', transparent: true);
+    $component = new QrComponent(data: 'https://laravel.com', transparent: true);
     $component->withAttributes([]);
 
     expect($component->builder()->options()->background)->toBeNull();
 });
 
 it('starts from a named profile', function (): void {
-    $component = new QrComponent(data: 'https://sbaiz.com', profile: 'brand');
+    $component = new QrComponent(data: 'https://laravel.com', profile: 'brand');
     $component->withAttributes([]);
 
     expect($component->builder()->options()->modules)->toBe(ModuleStyle::Dots);
 });
 
 it('lets an attribute override the profile', function (): void {
-    $component = new QrComponent(data: 'https://sbaiz.com', profile: 'brand');
+    $component = new QrComponent(data: 'https://laravel.com', profile: 'brand');
     $component->withAttributes(['modules' => 'square']);
 
     expect($component->builder()->options()->modules)->toBe(ModuleStyle::Square);
 });
 
 it('passes unmapped attributes through to the wrapper', function (): void {
-    expect(render('<x-qr data="https://sbaiz.com" class="shadow" id="ticket" />'))
+    expect(render('<x-qr data="https://laravel.com" class="shadow" id="ticket" />'))
         ->toContain('id="ticket"')
         ->toContain('shadow');
 });
 
 it('hides a decorative code from assistive technology', function (): void {
-    expect(render('<x-qr data="https://sbaiz.com" />'))
+    expect(render('<x-qr data="https://laravel.com" />'))
         ->toContain('role="presentation"')
         ->toContain('aria-hidden="true"');
 });
 
 it('labels a code that was given alt text', function (): void {
-    $html = render('<x-qr data="https://sbaiz.com" alt="Ticket A-12" />');
+    $html = render('<x-qr data="https://laravel.com" alt="Ticket A-12" />');
 
     expect($html)->toContain('role="img"')
         ->toContain('aria-label="Ticket A-12"')
@@ -134,13 +134,13 @@ it('labels a code that was given alt text', function (): void {
 });
 
 it('escapes alt text it injects after rendering', function (): void {
-    $html = render('<x-qr data="https://sbaiz.com" alt=\'Tom &amp; "Jerry"\' />');
+    $html = render('<x-qr data="https://laravel.com" alt=\'Tom &amp; "Jerry"\' />');
 
     expect($html)->toContain('&amp;')->not->toContain('aria-label="Tom & "Jerry""');
 });
 
 it('takes the raw options array as an escape hatch', function (): void {
-    $component = new QrComponent(data: 'https://sbaiz.com', options: ['eyes' => 'leaf']);
+    $component = new QrComponent(data: 'https://laravel.com', options: ['eyes' => 'leaf']);
     $component->withAttributes([]);
 
     expect($component->builder()->options()->eyes)->toBe(EyeStyle::Leaf);
@@ -160,5 +160,5 @@ it('complains when there is nothing to encode', function (): void {
 });
 
 it('is registered under a namespaced tag as well', function (): void {
-    expect(render('<x-qr::qr data="https://sbaiz.com" />'))->toContain('<svg');
+    expect(render('<x-qr::qr data="https://laravel.com" />'))->toContain('<svg');
 });

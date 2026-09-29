@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Storage;
  * The README promises these work. This file is why that promise holds.
  */
 it('runs the quick start examples', function (): void {
-    expect(Qr::make('https://sbaiz.com')->toSvg())->toContain('<svg');
+    expect(Qr::make('https://laravel.com')->toSvg())->toContain('<svg');
 
     expect(
-        Qr::make('https://sbaiz.com')
+        Qr::make('https://laravel.com')
             ->modules('dots')
             ->eyes('rounded')
             ->gradient('#4338ca', '#be185d', 'linear', 45)
@@ -26,7 +26,7 @@ it('runs the quick start examples', function (): void {
 });
 
 it('runs every styling example', function (): void {
-    $url = 'https://sbaiz.com';
+    $url = 'https://laravel.com';
 
     foreach (['square', 'rounded', 'dots', 'diamond', 'vertical', 'horizontal'] as $style) {
         expect(Qr::make($url)->modules($style)->toSvg())->toContain('<svg');
@@ -50,13 +50,13 @@ it('runs every styling example', function (): void {
 });
 
 it('rejects a named colour exactly as the README says', function (): void {
-    expect(fn () => Qr::make('https://sbaiz.com')->color('rebeccapurple'))
+    expect(fn () => Qr::make('https://laravel.com')->color('rebeccapurple'))
         ->toThrow(QrException::class, 'must be a hex colour such as #0af or #00aaff');
 });
 
 it('runs the logo and caption examples', function (): void {
     $logo = temporaryPng();
-    $url = 'https://sbaiz.com';
+    $url = 'https://laravel.com';
 
     expect(Qr::make($url)->logo($logo)->toSvg())->toContain('<image');
     expect(Qr::make($url)->logo($logo, size: 0.25, padding: 1.0, background: '#ffffff')->toSvg())->toContain('<image');
@@ -65,7 +65,7 @@ it('runs the logo and caption examples', function (): void {
 });
 
 it('reports the fields the README prints', function (): void {
-    $report = Qr::make('https://sbaiz.com')
+    $report = Qr::make('https://laravel.com')
         ->modules('dots', 0.9)
         ->logo(temporaryPng())
         ->scannability();
@@ -91,7 +91,7 @@ it('reports the fields the README prints', function (): void {
 });
 
 it('runs every format example', function (): void {
-    $url = 'https://sbaiz.com';
+    $url = 'https://laravel.com';
 
     expect(Qr::make($url)->toSvg())->toContain('<svg')
         ->and(Qr::make($url)->toPdf())->toStartWith('%PDF')
@@ -102,7 +102,7 @@ it('runs every format example', function (): void {
 });
 
 it('runs the CMYK example', function (): void {
-    $pdf = Qr::make('https://sbaiz.com')
+    $pdf = Qr::make('https://laravel.com')
         ->cmyk('foreground', [0, 0, 0, 100])
         ->cmyk('background', [0, 0, 0, 0])
         ->toPdf();
@@ -111,8 +111,8 @@ it('runs the CMYK example', function (): void {
 });
 
 it('runs every payload example', function (): void {
-    expect(Qr::url('https://sbaiz.com/hello')->content())->toBe('https://sbaiz.com/hello');
-    expect(Qr::url('sbaiz.com')->content())->toBe('https://sbaiz.com');
+    expect(Qr::url('https://laravel.com/docs')->content())->toBe('https://laravel.com/docs');
+    expect(Qr::url('laravel.com')->content())->toBe('https://laravel.com');
 
     expect(Qr::wifi('Office', 'sup3rsecret')->content())->toBe('WIFI:T:WPA;S:Office;P:sup3rsecret;;');
     expect(Qr::wifi('Guest', encryption: 'nopass')->content())->toContain('T:nopass');
@@ -122,24 +122,24 @@ it('runs every payload example', function (): void {
     ])->content())->toContain('E:PEAP');
 
     expect(Qr::vcard([
-        'first' => 'Gabriele',
-        'last' => 'Sbaiz',
-        'org' => 'NoviasNet',
+        'first' => 'Mario',
+        'last' => 'Rossi',
+        'org' => 'Acme S.r.l.',
         'title' => 'Developer',
         'mobile' => '+393331234567',
-        'email' => ['gabriele@example.com', 'g@example.com'],
-        'street' => 'Via Roma 1',
-        'city' => 'Udine',
-        'postal_code' => '33100',
+        'email' => ['mario.rossi@example.com', 'm.rossi@example.com'],
+        'street' => 'Via Verdi 10',
+        'city' => 'Milano',
+        'postal_code' => '20121',
         'country' => 'Italy',
-        'url' => 'https://sbaiz.com',
+        'url' => 'https://laravel.com',
     ])->content())->toContain('BEGIN:VCARD');
 
-    expect(Qr::vcard(['first' => 'Gabriele', 'last' => 'Sbaiz', 'mobile' => '+393331234567'], mecard: true)->content())
+    expect(Qr::vcard(['first' => 'Mario', 'last' => 'Rossi', 'mobile' => '+393331234567'], mecard: true)->content())
         ->toStartWith('MECARD:');
 
-    expect(Qr::email('gabriele@example.com', 'Order #12', "Hello\nthere")->content())->toStartWith('mailto:');
-    expect(Qr::email('gabriele@example.com', 'Order #12', matmsg: true)->content())->toStartWith('MATMSG:');
+    expect(Qr::email('mario.rossi@example.com', 'Order #12', "Hello\nthere")->content())->toStartWith('mailto:');
+    expect(Qr::email('mario.rossi@example.com', 'Order #12', matmsg: true)->content())->toStartWith('MATMSG:');
     expect(Qr::phone('+39 333 1234567')->content())->toBe('tel:+393331234567');
     expect(Qr::sms('+393331234567', 'On my way')->content())->toBe('SMSTO:+393331234567:On my way');
     expect(Qr::geo(46.0693, 13.2358)->content())->toBe('geo:46.0693,13.2358');
@@ -147,7 +147,7 @@ it('runs every payload example', function (): void {
     expect(Qr::geo(46.0693, 13.2358, query: 'Udine Castle')->content())->toContain('?q=Udine%20Castle');
 
     expect(Qr::epc(
-        name: 'NoviasNet S.r.l.',
+        name: 'Acme S.r.l.',
         iban: 'IT60X0542811101000000123456',
         amount: 12.30,
         remittance: 'Invoice 2026/0042',
@@ -168,7 +168,7 @@ it('refuses a logo on an EPC payload', function (): void {
 });
 
 it('runs every output example', function (): void {
-    $builder = Qr::make('https://sbaiz.com');
+    $builder = Qr::make('https://laravel.com');
 
     expect($builder->toSvg())->toBeString()
         ->and($builder->toHtml())->toBeString()
@@ -190,12 +190,12 @@ it('runs every output example', function (): void {
 });
 
 it('runs the profile examples', function (): void {
-    expect(Qr::profile('brand', 'https://sbaiz.com')->toSvg())->toContain('<svg')
+    expect(Qr::profile('brand', 'https://laravel.com')->toSvg())->toContain('<svg')
         ->and(Qr::profiles())->toContain('brand', 'ticket', 'minimal');
 });
 
 it('runs the cache examples', function (): void {
-    $url = 'https://sbaiz.com';
+    $url = 'https://laravel.com';
 
     expect(Qr::make($url)->cache()->toPng())->toStartWith("\x89PNG")
         ->and(Qr::make($url)->cache(ttl: 3600, store: 'array')->toPng())->toStartWith("\x89PNG")
@@ -209,11 +209,11 @@ it('runs the macro examples', function (): void {
         ->eyes('rounded')
         ->gradient('#4338ca', '#be185d'));
 
-    expect(Qr::make('https://sbaiz.com')->brandish()->size(400)->toSvg())->toContain('<svg');
+    expect(Qr::make('https://laravel.com')->brandish()->size(400)->toSvg())->toContain('<svg');
 
     QrBuilder::macro('oops', function (): void {});
 
-    expect(fn () => Qr::make('https://sbaiz.com')->oops())
+    expect(fn () => Qr::make('https://laravel.com')->oops())
         ->toThrow(QrException::class, 'must return a value');
 });
 
@@ -226,7 +226,7 @@ it('runs the batch recipe', function (): void {
     mkdir($directory);
 
     foreach ([1, 2, 3] as $id) {
-        $base->withContent("https://sbaiz.com/orders/{$id}")->save("{$directory}/{$id}.png");
+        $base->withContent("https://laravel.com/docs/{$id}")->save("{$directory}/{$id}.png");
     }
 
     expect(glob($directory.'/*.png'))->toHaveCount(3);
@@ -236,7 +236,7 @@ it('runs the batch recipe', function (): void {
 });
 
 it('runs the ticket recipe', function (): void {
-    $builder = Qr::profile('ticket', 'https://sbaiz.com/t/A-12')
+    $builder = Qr::profile('ticket', 'https://laravel.com/docs/queues')
         ->label('A-12')
         ->size(240);
 
@@ -248,13 +248,13 @@ it('matches the README on profile merging', function (): void {
     config()->set('qrcode-toolkit.profiles.partial', ['gradient' => ['type' => 'radial']]);
     config()->set('qrcode-toolkit.defaults.gradient', ['from' => '#4338ca', 'to' => '#be185d', 'type' => 'linear', 'angle' => 0]);
 
-    $options = Qr::profile('partial', 'https://sbaiz.com')->options();
+    $options = Qr::profile('partial', 'https://laravel.com')->options();
 
     expect($options->gradient?->type->value)->toBe('radial')
         ->and($options->gradient?->from)->toBe('#4338ca');
 });
 
 it('reports the shape counts the README quotes', function (): void {
-    expect(count(layoutFor(['modules' => 'square'])->body))->toBe(231)
-        ->and(count(layoutFor(['modules' => 'vertical'])->body))->toBe(123);
+    expect(count(layoutFor(['modules' => 'square'])->body))->toBe(229)
+        ->and(count(layoutFor(['modules' => 'vertical'])->body))->toBe(125);
 });

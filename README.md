@@ -16,7 +16,7 @@ A QR code generator for Laravel that tells you what your styling costs — `dots
 
 ## Contents
 
-- [Do you need this?](#do-you-need-this)
+- [How it compares](#how-it-compares)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick start](#quick-start)
@@ -63,53 +63,83 @@ A QR code generator for Laravel that tells you what your styling costs — `dots
 - [Changelog](#changelog)
 - [License](#license)
 
-## Do you need this?
+## How it compares
 
-Probably not. If you want a black QR code on a white background, install
-[`bacon/bacon-qr-code`](https://github.com/Bacon/BaconQrCode) and write six
-lines, or take [`Linkxtr/laravel-qrcode`](https://github.com/Linkxtr/laravel-qrcode)
-for a Laravel-native wrapper with more payload helpers than this one has. Both
-are good, both are well maintained, and both are less code in your `vendor`
-directory.
+Checked on 2026-09-28 against each project's own source and documentation.
+`?` means I could not verify it from a real page, not that the answer is no.
 
-Bacon in particular is better than its reputation. It has had rounded and dot
-modules, four eye shapes, per-eye two-tone fills, five gradient types and CMYK
-since version 2, and anyone who tells you it only draws squares has not read
-it. If those cover what you need, stop here and use it directly.
+### Styling
 
-What this package adds:
+| | **qrcode-toolkit** | bacon 3.1 | endroid 6.1 | chillerlan 6.0 | simple-qrcode 4.2 | Linkxtr 3.2 | quar 1.8 | 2amigos 4.x | lara-zeus/qr 3.0 |
+|---|---|---|---|---|---|---|---|---|---|
+| Module shapes | **6** | 3 | 0 | 2 | 3 | 3 | 5 | 3 | 3 |
+| `diamond` / capsule runs | **yes** | no | no | no | no | no | no | no | no |
+| Neighbour-aware rounding | **yes** | global roundness | — | — | — | — | — | — | — |
+| Eye shapes | **4** | 4 | 0 | — | 2 | 3 | 4 | — | 2 |
+| Per-eye colours | ring + pupil | **per eye** | no | per module type | no | yes | ? | ? | yes |
+| Gradients | linear, radial | **5 types** | no | SVG, hand-written | 5 types | 5 types | 5 types | 5 types | 5 types |
+| CMYK | **PDF + EPS** | **yes** | no | ? | no | **yes** | no | ? | no |
+| Logo | yes | no | yes | space only | PNG only | yes | yes | yes | yes |
+| Logo knock-out **before** shaping | **yes** | — | no | no | no | no | no | no | no |
+| Caption | yes | no | yes | no | no | no | yes | yes | no |
+| Frame | **yes** | no | no | no | no | no | no | no | no |
 
-- **One geometry drives SVG, PNG, PDF and EPS.** The usual arrangement is one
-  renderer per format, each with its own gaps — no gradient on the GD backend,
-  a logo that merges into PNG but not SVG, an output format fixed by the UI.
-  Here the layout is computed once in module units and four writers consume it,
-  so a style that works in one format works in all four.
-- **The logo hole is punched before the shapes are decided.** Overlaying or
-  clipping afterwards cuts a rounded capsule in half at the logo edge. Masking
-  the matrix first means runs terminate cleanly and corners round correctly
-  around the hole.
-- **It tells you what the styling cost.** `scannability()` reports the
-  correction level actually used, how many modules the logo erased, how much of
-  the budget that spent, the contrast ratio, and the smallest width the code
-  should be printed at. I have not found another PHP library that reports any
-  of it.
-- **It refuses a code that will not scan.** A foreground within 3:1 of the
-  background throws instead of rendering. Low contrast is the commonest cause
-  of an unreadable code, and it is not usually checked anywhere.
-- **Logos are treated as untrusted input.** Local files and `data:` URIs only,
-  never a URL, with the stream wrappers blocked, the real content type checked
-  against the claimed one, and a decompression-bomb guard.
-- **`diamond`, `vertical` and `horizontal` modules, and a frame**, which I have
-  not found elsewhere.
-- **A validated SEPA GiroCode.** There are libraries that build the payload and
-  libraries that render it; this one checks the IBAN with a real mod-97 test
-  and enforces the specification's field limits, error-correction level and
-  no-logo rule.
+### Output
 
-The trade: eight payload helpers rather than thirteen, no Artisan command, and
-it will not let you render pale grey on white even when you are certain you
-want to. It is built for the case where a code has to look designed *and* still
-work, and it is opinionated about the second half.
+| | **qrcode-toolkit** | bacon 3.1 | endroid 6.1 | chillerlan 6.0 | simple-qrcode 4.2 | Linkxtr 3.2 | quar 1.8 | 2amigos 4.x | lara-zeus/qr 3.0 |
+|---|---|---|---|---|---|---|---|---|---|
+| SVG / PNG / PDF / EPS | **all four** | SVG, EPS, raster | all four | all four | SVG, PNG, EPS | + WebP | SVG, PNG, EPS | several | PNG |
+| One geometry, every format | **yes** | no | no | no | no | no | no | no | no |
+| PDF without a PDF dependency | **yes** | — | FPDF | FPDF | — | — | — | — | — |
+| Byte-stable output | **guaranteed** | ? | ? | ? | ? | ? | ? | ? | ? |
+
+### Knowing whether it will scan
+
+| | **qrcode-toolkit** | bacon 3.1 | endroid 6.1 | chillerlan 6.0 | simple-qrcode 4.2 | Linkxtr 3.2 | quar 1.8 | 2amigos 4.x | lara-zeus/qr 3.0 |
+|---|---|---|---|---|---|---|---|---|---|
+| Contrast guard | **yes** | no | no | no | no | no | no | no | no |
+| Scannability report | **yes** | no | no | no | no | no | no | no | no |
+| Decodes its own output in tests | **every style** | pixel snapshots | optional | own reader | no | **yes** | no tests | decoder is a dependency | no |
+| Logo input validated | **12 checks** | — | no | — | no | no | no | no | skips SVG |
+
+### Laravel and payloads
+
+| | **qrcode-toolkit** | bacon 3.1 | endroid 6.1 | chillerlan 6.0 | simple-qrcode 4.2 | Linkxtr 3.2 | quar 1.8 | 2amigos 4.x | lara-zeus/qr 3.0 |
+|---|---|---|---|---|---|---|---|---|---|
+| Facade | yes | — | — | — | yes | yes | yes | yes | yes |
+| Blade component | yes | — | — | — | no | yes | no | yes | no |
+| Config + named profiles | **both** | — | — | — | no | config | no | config | no |
+| Caching | yes | — | — | — | no | yes | no | no | no |
+| Artisan command | **no** | — | — | — | no | **yes** | no | no | no |
+| Payload helpers | 8 | 0 | 0 | 0 | 6 | **13** | 0 | **13** | 0 |
+| SEPA GiroCode | **yes, IBAN validated** | no | no | no | no | no | no | no | no |
+| PHP floor | **8.2** | 8.1 | **8.4** | 8.2 | 7.2 | 8.2 | 8.2 | 8.3 | 8.1 |
+| Laravel | **11–13** | — | — | — | not required | 12–13 | 10–13 | via bridge | via Filament |
+
+### Reading the tables
+
+Three things worth saying plainly.
+
+**Bacon is better than its reputation.** It has had rounded and dot modules,
+four eye shapes, per-eye two-tone fills, five gradient types and CMYK since
+version 2, and its per-eye fills are more capable than this package's ring and
+pupil pair. If the styling you want is in its column, use it directly and skip
+the wrapper.
+
+**Two projects ship more payload helpers than this one**, and one ships an
+Artisan command this one does not have. If you mainly need payload breadth,
+`Linkxtr/laravel-qrcode` and `2amigos/qrcode-library` are the better fit.
+
+**`simplesoftwareio/simple-qrcode` is included for scale, not as a live
+option.** Its last release was February 2021 and its documentation domain now
+serves unrelated content; the forks exist to keep its API alive.
+
+What is left, and what this package was built for, is the bottom half of the
+second and third tables: one geometry driving four formats, a logo hole punched
+before the shapes are decided, and two features that tell you whether the result
+will actually scan. The trade is fewer payload helpers, no Artisan command, and
+a contrast guard that will not let you render pale grey on white even when you
+are certain you want to.
 
 ## Requirements
 
@@ -136,13 +166,13 @@ no assets.
 use Gabrielesbaiz\QrcodeToolkit\Facades\Qr;
 
 // Inline SVG, ready for a Blade view.
-echo Qr::make('https://sbaiz.com')->toSvg();
+echo Qr::make('https://laravel.com')->toSvg();
 ```
 
 Something worth looking at:
 
 ```php
-Qr::make('https://sbaiz.com')
+Qr::make('https://laravel.com')
     ->modules('dots')
     ->eyes('rounded')
     ->gradient('#4338ca', '#be185d', 'linear', 45)
@@ -195,7 +225,7 @@ neighbours are deliberately ignored — two modules touching only at a corner ke
 the pinch between them, which is what people mean by a "smooth" QR code.
 
 `vertical` and `horizontal` merge whole runs into single capsules. For
-`https://sbaiz.com` that takes 231 separate shapes down to 123, which is a
+`https://laravel.com` that takes 229 separate shapes down to 125, which is a
 smaller SVG as well as a different look.
 
 ### Module scale
@@ -354,14 +384,14 @@ $report = Qr::make($url)
 $report->verdict();              // 'good', 'marginal' or 'risky'
 $report->ecc->value;             // 'H' — raised for the logo
 $report->eccRaised;              // true
-$report->version;                // 4
-$report->matrixSize;             // 33
-$report->modulesErased;          // 64
-$report->budgetUsed();           // 0.29
-$report->budgetRemaining();      // 0.71
+$report->version;                // 3
+$report->matrixSize;             // 29
+$report->modulesErased;          // 25
+$report->budgetUsed();           // 0.25
+$report->budgetRemaining();      // 0.75
 $report->contrastRatio;          // 21.0 (a property, not a method)
-$report->minimumPrintWidthMm();  // 13.2
-$report->moduleSizeMm(50.0);     // 1.51
+$report->minimumPrintWidthMm();  // 11.6
+$report->moduleSizeMm(50.0);     // 1.72
 $report->reasons();              // why it is not 'good', in plain sentences
 ```
 
@@ -374,16 +404,16 @@ $report->toArray();
 //     'verdict' => 'good',
 //     'ecc' => 'H',
 //     'ecc_raised' => true,
-//     'version' => 4,
-//     'matrix_size' => 33,
-//     'modules_total' => 220,
-//     'modules_erased' => 64,
-//     'budget_used' => 0.2909,
-//     'budget_remaining' => 0.7091,
+//     'version' => 3,
+//     'matrix_size' => 29,
+//     'modules_total' => 328,
+//     'modules_erased' => 25,
+//     'budget_used' => 0.2541,
+//     'budget_remaining' => 0.7459,
 //     'contrast_ratio' => 21.0,
 //     'module_scale' => 0.9,
 //     'transparent_background' => false,
-//     'minimum_print_width_mm' => 13.2,
+//     'minimum_print_width_mm' => 11.6,
 //     'reasons' => [...],
 // ]
 ```
@@ -469,8 +499,8 @@ models in one file. SVG and PNG ignore CMYK overrides and say so.
 ### Links
 
 ```php
-Qr::url('https://sbaiz.com/hello');
-Qr::url('sbaiz.com');              // https:// is added
+Qr::url('https://laravel.com/docs');
+Qr::url('laravel.com');              // https:// is added
 ```
 
 ### WiFi
@@ -500,17 +530,17 @@ Contacts:
 
 ```php
 Qr::vcard([
-    'first' => 'Gabriele',
-    'last' => 'Sbaiz',
-    'org' => 'NoviasNet',
+    'first' => 'Mario',
+    'last' => 'Rossi',
+    'org' => 'Acme S.r.l.',
     'title' => 'Developer',
     'mobile' => '+393331234567',
-    'email' => ['gabriele@example.com', 'g@example.com'],
-    'street' => 'Via Roma 1',
-    'city' => 'Udine',
-    'postal_code' => '33100',
+    'email' => ['mario.rossi@example.com', 'm.rossi@example.com'],
+    'street' => 'Via Verdi 10',
+    'city' => 'Milano',
+    'postal_code' => '20121',
     'country' => 'Italy',
-    'url' => 'https://sbaiz.com',
+    'url' => 'https://laravel.com',
 ]);
 ```
 
@@ -518,7 +548,7 @@ MECARD is around 40% shorter, which is often a whole symbol version at small
 print sizes:
 
 ```php
-Qr::vcard(['first' => 'Gabriele', 'last' => 'Sbaiz', 'mobile' => '+393331234567'], mecard: true);
+Qr::vcard(['first' => 'Mario', 'last' => 'Rossi', 'mobile' => '+393331234567'], mecard: true);
 ```
 
 vCard 4.0 is deliberately not offered: too many Android scanners still mishandle
@@ -527,8 +557,8 @@ it.
 ### Email, phone and SMS
 
 ```php
-Qr::email('gabriele@example.com', 'Order #12', "Hello\nthere");
-Qr::email('gabriele@example.com', 'Order #12', matmsg: true);   // legacy ZXing form
+Qr::email('mario.rossi@example.com', 'Order #12', "Hello\nthere");
+Qr::email('mario.rossi@example.com', 'Order #12', matmsg: true);   // legacy ZXing form
 
 Qr::phone('+39 333 1234567');
 Qr::sms('+393331234567', 'On my way');
@@ -555,7 +585,7 @@ A GiroCode, to EPC069-12:
 
 ```php
 Qr::epc(
-    name: 'NoviasNet S.r.l.',
+    name: 'Acme S.r.l.',
     iban: 'IT60X0542811101000000123456',
     amount: 12.30,
     remittance: 'Invoice 2026/0042',
@@ -621,7 +651,7 @@ return Qr::make($order->url())->size(400);
 ## The Blade component
 
 ```blade
-<x-qr data="https://sbaiz.com" />
+<x-qr data="https://laravel.com" />
 
 <x-qr :data="$ticket->url" profile="ticket" size="240" label="{{ $ticket->code }}" />
 
@@ -877,7 +907,7 @@ bad light is not the place to be clever.
 <summary><b>A branded code with a logo, checked before it goes to the printer</b></summary>
 
 ```php
-$builder = Qr::profile('brand', 'https://sbaiz.com')
+$builder = Qr::profile('brand', 'https://laravel.com')
     ->logo(public_path('img/mark.png'), size: 0.22, background: '#ffffff');
 
 $report = $builder->scannability();

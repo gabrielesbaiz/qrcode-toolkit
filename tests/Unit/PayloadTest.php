@@ -52,12 +52,12 @@ it('rejects an SSID or passphrase of the wrong length', function (): void {
 });
 
 it('builds a vCard with CRLF line endings and no folding', function (): void {
-    $card = Payload::vcard(['first' => 'Gabriele', 'last' => 'Sbaiz', 'email' => 'g@example.com']);
+    $card = Payload::vcard(['first' => 'Mario', 'last' => 'Rossi', 'email' => 'm.rossi@example.com']);
 
     expect($card)->toStartWith("BEGIN:VCARD\r\nVERSION:3.0\r\n")
-        ->toContain("\r\nFN:Gabriele Sbaiz\r\n")
-        ->toContain("\r\nN:Sbaiz;Gabriele;;;\r\n")
-        ->toContain("\r\nEMAIL;TYPE=INTERNET:g@example.com\r\n")
+        ->toContain("\r\nFN:Mario Rossi\r\n")
+        ->toContain("\r\nN:Rossi;Mario;;;\r\n")
+        ->toContain("\r\nEMAIL;TYPE=INTERNET:m.rossi@example.com\r\n")
         ->toEndWith("\r\nEND:VCARD");
 });
 
@@ -75,14 +75,14 @@ it('strips newlines out of a vCard value', function (): void {
 });
 
 it('builds a shorter MECARD than the equivalent vCard', function (): void {
-    $fields = ['first' => 'Gabriele', 'last' => 'Sbaiz', 'email' => 'g@example.com', 'mobile' => '+393331234567'];
+    $fields = ['first' => 'Mario', 'last' => 'Rossi', 'email' => 'm.rossi@example.com', 'mobile' => '+393331234567'];
 
     expect(strlen(Payload::mecard($fields)))->toBeLessThan(strlen(Payload::vcard($fields)));
 });
 
 it('formats a MECARD name as surname then given name', function (): void {
-    expect(Payload::mecard(['first' => 'Gabriele', 'last' => 'Sbaiz']))
-        ->toStartWith('MECARD:N:Sbaiz,Gabriele;')
+    expect(Payload::mecard(['first' => 'Mario', 'last' => 'Rossi']))
+        ->toStartWith('MECARD:N:Rossi,Mario;')
         ->toEndWith(';;');
 });
 
@@ -112,7 +112,7 @@ it('rejects a broken IBAN, saying which check failed', function (string $iban, s
 ]);
 
 it('builds the twelve line EPC block', function (): void {
-    $payload = Epc::build('NoviasNet', 'IT60X0542811101000000123456', 12.30, 'Invoice 42', 'BPPBITRRXXX', 'GDDS');
+    $payload = Epc::build('Acme S.r.l.', 'IT60X0542811101000000123456', 12.30, 'Invoice 42', 'BPPBITRRXXX', 'GDDS');
     $lines = explode("\n", $payload);
 
     expect($lines[0])->toBe('BCD')
@@ -120,7 +120,7 @@ it('builds the twelve line EPC block', function (): void {
         ->and($lines[2])->toBe('1')
         ->and($lines[3])->toBe('SCT')
         ->and($lines[4])->toBe('BPPBITRRXXX')
-        ->and($lines[5])->toBe('NoviasNet')
+        ->and($lines[5])->toBe('Acme S.r.l.')
         ->and($lines[6])->toBe('IT60X0542811101000000123456')
         ->and($lines[7])->toBe('EUR12.30')
         ->and($lines[8])->toBe('GDDS')

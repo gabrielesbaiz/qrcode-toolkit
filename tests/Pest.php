@@ -15,7 +15,7 @@ uses(TestCase::class)->in(__DIR__.'/Feature', __DIR__.'/Unit');
  */
 function content(): string
 {
-    return 'https://sbaiz.com';
+    return 'https://laravel.com';
 }
 
 /**
