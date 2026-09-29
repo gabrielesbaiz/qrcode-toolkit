@@ -33,7 +33,9 @@ First release.
 - A logo loader that accepts only local paths and `data:` URIs, blocks every
   URL scheme and PHP stream wrapper, checks the real media type against the
   claimed one, and guards against decompression bombs.
-- Payload helpers: `url`, `wifi`, `vcard` (vCard 3.0 or MECARD), `email`
+- Payload helpers: `url`, `wifi`, `vcard` (vCard 3.0, vCard 4.0 or MECARD),
+  `calendar` (a VEVENT with times in UTC), `otpauth` (TOTP or HOTP, with the
+  Base32 secret validated because a wrong one locks the user out), `email`
   (`mailto:` or `MATMSG:`), `phone`, `sms`, `geo`, and `epc` — a SEPA EPC QR
   (EPC069-12) with genuine mod-97 IBAN validation, enforced field limits and
   the specification's error-correction and logo rules.

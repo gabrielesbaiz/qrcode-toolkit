@@ -115,7 +115,7 @@ Checked on 2026-09-28 against each project's own source and documentation.
 | Config + named profiles | **both** | — | — | — | no | config | no | config | no |
 | Caching | yes | — | — | — | no | yes | no | no | no |
 | Artisan command | **no** | — | — | — | no | **yes** | no | no | no |
-| Payload helpers | 9 forms | 0 | 0 | 0 | 6 | **12** | 0 | **13** | 0 |
+| Payload helpers | **12 forms** | 0 | 0 | 0 | 6 | 12 | 0 | 13 | 0 |
 | SEPA EPC QR | **yes, IBAN validated** | no | no | no | no | no | no | no | no |
 | PHP floor | **8.2** | 8.1 | **8.4** | 8.2 | 7.2 | 8.2 | 8.2 | 8.3 | 8.1 |
 | Laravel | **11–13** | — | — | — | not required | 12–13 | 10–13 | via bridge | via Filament |
@@ -635,6 +635,14 @@ Qr::vcard([..., 'birthday' => '1985-03-12']);
 Qr::vcard([..., 'birthday' => new DateTimeImmutable('1985-03-12')]);
 ```
 
+vCard 4.0 is available when you want it — RFC 6350, with `tel:` URIs and an
+explicit `KIND`. It is not the default because enough Android scanners still
+mishandle it:
+
+```php
+Qr::vcard($fields, version: '4.0');
+```
+
 MECARD is around 40% shorter, which is often a whole symbol version at small
 print sizes:
 
@@ -658,6 +666,36 @@ Qr::sms('+393331234567', 'On my way');
 `mailto:` values are `rawurlencode`d rather than run through `http_build_query`,
 which would emit a `+` for a space and land a literal plus sign in the subject
 line.
+
+### Calendar events
+
+```php
+Qr::calendar([
+    'summary' => 'Laracon EU',
+    'start' => '2026-09-15 09:00',
+    'end' => '2026-09-16 17:00',
+    'location' => 'Amsterdam',
+]);
+
+Qr::calendar(['summary' => 'Release day', 'start' => '2026-09-15', 'all_day' => true]);
+```
+
+Times are written in UTC, and a `DateTimeInterface` in any zone is converted —
+a local time with no timezone is read as the scanner's own and quietly moves
+the event. An end before its start throws.
+
+### Two-factor enrolment
+
+```php
+Qr::otpauth('Acme', 'mario@example.com', 'JBSWY3DPEHPK3PXP');
+Qr::otpauth('Acme', 'mario', $secret, ['digits' => 8, 'algorithm' => 'SHA256', 'period' => 60]);
+Qr::otpauth('Acme', 'mario', $secret, ['type' => 'hotp', 'counter' => 1]);
+```
+
+The secret must be Base32; raw bytes are refused, because an authenticator
+given the wrong encoding produces codes that are simply wrong and the failure
+is discovered by a locked-out user. Error correction is raised to Q, since an
+enrolment code is scanned once and matters.
 
 ### Locations
 
@@ -866,7 +904,9 @@ Qr::make($url)->oops();
 | `profile(string $name, string $content = '')` | `QrBuilder` | Merges a named profile over the defaults |
 | `url(string $url)` | `QrBuilder` | Validates, adds `https://` if missing |
 | `wifi(string $ssid, ?string $password, string $encryption = 'WPA', bool $hidden = false, array $enterprise = [])` | `QrBuilder` | `WPA`, `WEP`, `WPA2-EAP`, `nopass` |
-| `vcard(array $fields, bool $mecard = false)` | `QrBuilder` | vCard 3.0, or MECARD |
+| `vcard(array $fields, bool $mecard = false, string $version = '3.0')` | `QrBuilder` | vCard 3.0 or 4.0, or MECARD |
+| `calendar(array $fields)` | `QrBuilder` | VEVENT, times in UTC |
+| `otpauth(string $issuer, string $account, string $secret, array $options = [])` | `QrBuilder` | TOTP or HOTP; Base32 secret validated |
 | `email(string $to, ?string $subject, ?string $body, bool $matmsg = false)` | `QrBuilder` | `mailto:`, or `MATMSG:` |
 | `phone(string $number)` | `QrBuilder` | `tel:` |
 | `sms(string $number, ?string $message)` | `QrBuilder` | `SMSTO:` |

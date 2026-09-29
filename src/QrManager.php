@@ -138,9 +138,41 @@ final readonly class QrManager
      *
      * @param  array<string, mixed>  $fields
      */
-    public function vcard(array $fields, bool $mecard = false): QrBuilder
+    public function vcard(array $fields, bool $mecard = false, string $version = '3.0'): QrBuilder
     {
-        return $this->make($mecard ? Payload::mecard($fields) : Payload::vcard($fields));
+        if ($mecard) {
+            return $this->make(Payload::mecard($fields));
+        }
+
+        if (! in_array($version, ['3.0', '4.0'], true)) {
+            throw QrException::invalidOption('version', $version, ['3.0', '4.0']);
+        }
+
+        return $this->make(Payload::vcard($fields, $version));
+    }
+
+    /**
+     * Encode a calendar event.
+     *
+     * @param  array<string, mixed>  $fields  summary, start, end, location, description, url, all_day
+     */
+    public function calendar(array $fields): QrBuilder
+    {
+        return $this->make(Payload::calendar($fields));
+    }
+
+    /**
+     * Encode a two-factor enrolment URI.
+     *
+     * @param  array<string, mixed>  $options  type, digits, algorithm, period, counter
+     */
+    public function otpauth(string $issuer, string $account, string $secret, array $options = []): QrBuilder
+    {
+        // An enrolment code is scanned once, by a person who is then
+        // locked out if it was wrong, so error correction is worth more
+        // here than a small symbol.
+        return $this->make(Payload::otpauth($issuer, $account, $secret, $options))
+            ->with(['ecc' => 'Q', 'ecc_explicit' => true]);
     }
 
     /**

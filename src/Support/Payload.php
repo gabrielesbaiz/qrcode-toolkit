@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Gabrielesbaiz\QrcodeToolkit\Support;
 
+use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
+use Exception;
 use Gabrielesbaiz\QrcodeToolkit\Exceptions\QrException;
 
 /**
@@ -112,8 +115,12 @@ final class Payload
      *
      * @param  array<string, mixed>  $fields
      */
-    public static function vcard(array $fields): string
+    public static function vcard(array $fields, string $version = '3.0'): string
     {
+        if ($version === '4.0') {
+            return self::vcard4($fields);
+        }
+
         $get = static fn (string $key): string => is_scalar($fields[$key] ?? null) ? trim((string) $fields[$key]) : '';
 
         /** @var array<int, string> $lines */
@@ -167,6 +174,246 @@ final class Payload
         $lines[] = 'END:VCARD';
 
         return implode("\r\n", $lines);
+    }
+
+    /**
+     * Build a vCard 4.0 payload.
+     *
+     * RFC 6350 rather than RFC 2426: telephone numbers are tel: URIs,
+     * TYPE values are lower case, and KIND is stated explicitly. It is
+     * offered rather than defaulted because a number of Android scanners
+     * still mishandle it, which is why 3.0 remains the default.
+     *
+     * @param  array<string, mixed>  $fields
+     */
+    public static function vcard4(array $fields): string
+    {
+        $get = static fn (string $key): string => is_scalar($fields[$key] ?? null) ? trim((string) $fields[$key]) : '';
+
+        /** @var array<int, string> $lines */
+        $lines = ['BEGIN:VCARD', 'VERSION:4.0', 'KIND:individual'];
+
+        $name = [$get('last'), $get('first'), $get('middle'), $get('prefix'), $get('suffix')];
+        $lines[] = 'N:'.implode(';', array_map(self::escapeVcard(...), $name));
+
+        $formatted = $get('formatted') !== '' ? $get('formatted') : trim($get('first').' '.$get('last'));
+
+        if ($formatted === '') {
+            throw QrException::because('A vCard needs at least a first or last name.');
+        }
+
+        $lines[] = 'FN:'.self::escapeVcard($formatted);
+
+        foreach (['org' => 'ORG', 'title' => 'TITLE'] as $key => $property) {
+            if ($get($key) !== '') {
+                $lines[] = $property.':'.self::escapeVcard($get($key));
+            }
+        }
+
+        // In 4.0 a telephone number is a URI, not free text.
+        foreach (['phone' => 'voice', 'mobile' => 'cell', 'work_phone' => 'work,voice', 'fax' => 'fax'] as $key => $type) {
+            foreach (self::many($fields[$key] ?? null) as $number) {
+                $lines[] = sprintf('TEL;TYPE="%s";VALUE=uri:tel:%s', $type, self::telUri($number));
+            }
+        }
+
+        foreach (self::many($fields['email'] ?? null) as $email) {
+            $lines[] = 'EMAIL:'.self::escapeVcard($email);
+        }
+
+        $address = [$get('street'), $get('city'), $get('region'), $get('postal_code'), $get('country')];
+
+        if (implode('', $address) !== '') {
+            $lines[] = 'ADR;TYPE=work:;;'.implode(';', array_map(self::escapeVcard(...), $address));
+        }
+
+        foreach (['url' => 'URL', 'note' => 'NOTE'] as $key => $property) {
+            if ($get($key) !== '') {
+                $lines[] = $property.':'.self::escapeVcard($get($key));
+            }
+        }
+
+        if (isset($fields['birthday']) && $fields['birthday'] !== '') {
+            $lines[] = 'BDAY:'.self::birthday($fields['birthday'], compact: true);
+        }
+
+        $lines[] = 'END:VCARD';
+
+        return implode("\r\n", $lines);
+    }
+
+    /**
+     * Reduce a telephone number to what a tel: URI accepts.
+     */
+    private static function telUri(string $number): string
+    {
+        $plus = str_starts_with(trim($number), '+');
+
+        return ($plus ? '+' : '').(preg_replace('/\D+/', '', $number) ?? '');
+    }
+
+    /**
+     * Build a calendar event.
+     *
+     * A bare VEVENT rather than a whole VCALENDAR: it is what scanners
+     * offer to add to a diary, and it is what both of the other libraries
+     * emit. Times are written in UTC, because a local time with no
+     * timezone is read as the scanner's own and quietly moves the event.
+     *
+     * @param  array<string, mixed>  $fields
+     */
+    public static function calendar(array $fields): string
+    {
+        $get = static fn (string $key): string => is_scalar($fields[$key] ?? null) ? trim((string) $fields[$key]) : '';
+
+        $summary = $get('summary');
+
+        if ($summary === '') {
+            throw QrException::because('A calendar event needs a summary.');
+        }
+
+        $allDay = (bool) ($fields['all_day'] ?? false);
+
+        $start = self::moment($fields['start'] ?? null, 'start', $allDay);
+        $end = isset($fields['end'])
+            ? self::moment($fields['end'], 'end', $allDay)
+            : null;
+
+        if ($end !== null && $end < $start) {
+            throw QrException::because('A calendar event cannot end before it starts.');
+        }
+
+        $lines = ['BEGIN:VEVENT', 'SUMMARY:'.self::escapeVcard($summary)];
+
+        $lines[] = $allDay ? 'DTSTART;VALUE=DATE:'.$start : 'DTSTART:'.$start;
+
+        if ($end !== null) {
+            $lines[] = $allDay ? 'DTEND;VALUE=DATE:'.$end : 'DTEND:'.$end;
+        }
+
+        foreach (['location' => 'LOCATION', 'description' => 'DESCRIPTION', 'url' => 'URL'] as $key => $property) {
+            if ($get($key) !== '') {
+                $lines[] = $property.':'.self::escapeVcard($get($key));
+            }
+        }
+
+        $lines[] = 'END:VEVENT';
+
+        return implode("\r\n", $lines);
+    }
+
+    /**
+     * Format one end of an event.
+     */
+    private static function moment(mixed $value, string $field, bool $allDay): string
+    {
+        if ($value === null) {
+            throw QrException::because(sprintf('A calendar event needs a [%s] time.', $field));
+        }
+
+        if ($value instanceof DateTimeInterface) {
+            $utc = (new DateTimeImmutable('@'.$value->getTimestamp()))->setTimezone(new DateTimeZone('UTC'));
+
+            return $allDay ? $utc->format('Ymd') : $utc->format('Ymd\THis\Z');
+        }
+
+        if (! is_string($value)) {
+            throw QrException::because(sprintf('The [%s] time must be a DateTimeInterface or a date string.', $field));
+        }
+
+        try {
+            $parsed = new DateTimeImmutable($value, new DateTimeZone('UTC'));
+        } catch (Exception) {
+            throw QrException::because(sprintf('The [%s] time [%s] could not be read as a date.', $field, $value));
+        }
+
+        return $allDay ? $parsed->format('Ymd') : $parsed->format('Ymd\THis\Z');
+    }
+
+    /**
+     * Build an otpauth URI, for two-factor enrolment.
+     *
+     * The shape an authenticator app expects, per the Key URI Format:
+     * otpauth://totp/Issuer:account?secret=…&issuer=…&algorithm=…
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public static function otpauth(string $issuer, string $account, string $secret, array $options = []): string
+    {
+        $type = strtolower(self::option($options, 'type', 'totp'));
+
+        if (! in_array($type, ['totp', 'hotp'], true)) {
+            throw QrException::invalidOption('type', $type, ['totp', 'hotp']);
+        }
+
+        // The secret is Base32 with no padding, and an app given anything
+        // else produces codes that are simply wrong — a failure the user
+        // discovers by being locked out.
+        $clean = strtoupper((string) preg_replace('/[\s-]+/', '', $secret));
+
+        if ($clean === '' || preg_match('/^[A-Z2-7]+=*$/', $clean) !== 1) {
+            throw QrException::because(
+                'An otpauth secret must be Base32 — the letters A to Z and the digits 2 to 7. '
+                .'Most libraries give you one already encoded; do not pass raw bytes.',
+            );
+        }
+
+        $digits = (int) self::option($options, 'digits', '6');
+
+        if ($digits !== 6 && $digits !== 8) {
+            throw QrException::invalidOption('digits', $digits, [6, 8]);
+        }
+
+        $algorithm = strtoupper(self::option($options, 'algorithm', 'SHA1'));
+
+        if (! in_array($algorithm, ['SHA1', 'SHA256', 'SHA512'], true)) {
+            throw QrException::invalidOption('algorithm', $algorithm, ['SHA1', 'SHA256', 'SHA512']);
+        }
+
+        if (trim($issuer) === '' || trim($account) === '') {
+            throw QrException::because('An otpauth URI needs both an issuer and an account.');
+        }
+
+        $label = rawurlencode(trim($issuer)).':'.rawurlencode(trim($account));
+
+        $query = [
+            'secret='.rtrim($clean, '='),
+            'issuer='.rawurlencode(trim($issuer)),
+            'algorithm='.$algorithm,
+            'digits='.$digits,
+        ];
+
+        if ($type === 'hotp') {
+            $counter = $options['counter'] ?? null;
+
+            if (! is_numeric($counter)) {
+                throw QrException::because('A counter-based (hotp) URI needs a numeric [counter].');
+            }
+
+            $query[] = 'counter='.(int) $counter;
+        } else {
+            $period = (int) self::option($options, 'period', '30');
+
+            if ($period < 1 || $period > 300) {
+                throw QrException::outOfRange('period', $period, 1, 300);
+            }
+
+            $query[] = 'period='.$period;
+        }
+
+        return 'otpauth://'.$type.'/'.$label.'?'.implode('&', $query);
+    }
+
+    /**
+     * Read one otpauth option as a string, whatever it arrived as.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    private static function option(array $options, string $key, string $default): string
+    {
+        $value = $options[$key] ?? null;
+
+        return is_scalar($value) ? (string) $value : $default;
     }
 
     /**
