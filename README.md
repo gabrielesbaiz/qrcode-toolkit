@@ -149,10 +149,9 @@ reachable here and is not reachable there. The trade is that a preset name is
 more discoverable than a number, which is why the four names appear in this
 table rather than only in the source.
 
-**Two projects ship more payload helpers than this one**, and one ships an
-Artisan command this one does not have. Counted from source on 2026-09-28,
+**Two projects ship a comparable number of payload helpers.** Counted from source on 2026-09-28,
 `Linkxtr/laravel-qrcode` has twelve types and `2amigos/qrcode-library`
-thirteen, against nine forms here. What they have and this does not:
+thirteen, against twelve forms here. What they have and this does not:
 
 Seven overlap — email, geo, MeCard, phone, SMS, vCard and WiFi. Against
 `Linkxtr/laravel-qrcode` exactly **five** are missing, and none of them is
@@ -893,6 +892,44 @@ Qr::make($url)->oops();
 // QrException: Macro [oops] returned null. A builder macro must return a
 // value, usually $this->with([...]).
 ```
+
+## Artisan commands
+
+```bash
+php artisan qr:doctor        # what this machine can render, and which driver it will use
+php artisan qr:check <text>  # the readability report, as a build gate
+php artisan qr:make <text>   # render one code to a file, or to stdout
+php artisan qr:batch <csv>   # one code per row
+php artisan qr:profiles      # list the profiles, and draw one in the terminal
+php artisan qr:clear         # forget the cached codes
+```
+
+| Command | What it does |
+|---|---|
+| `qr:doctor` | Reports PHP extensions, which PNG driver resolves **and why**, the font path, the cache store and the security settings. The answer to "why is my gradient black" without reading the source. |
+| `qr:check {content}` | Runs `scannability()` and prints the report. `--fail-on=marginal\|risky` makes it a CI gate; `--json` for a machine. |
+| `qr:make {content}` | Renders to `--out`, or writes SVG to stdout. Takes every styling flag. |
+| `qr:batch {csv}` | One code per row of a CSV with a header. `--column`, `--name-column`, `--disk`, `--check`. A bad row is reported and skipped unless `--stop-on-error`. |
+| `qr:profiles {profile?}` | Lists the configured profiles and draws one with block characters, at two cells per module so it stays square and a phone can read it off the screen. |
+| `qr:clear` | Forgets cached codes. Where the store carries tags only those are dropped; where it cannot, it says so rather than flushing your whole cache. |
+
+Every generating command shares the styling flags — `--modules`, `--eyes`,
+`--gradient-from`, `--logo`, `--frame` and the rest — so a look worked out in
+`qr:check` transfers to `qr:make` and `qr:batch` unchanged:
+
+```bash
+php artisan qr:check "https://laravel.com" \
+    --modules=dots --module-scale=0.9 --eyes=rounded \
+    --gradient-from='#4338ca' --gradient-to='#be185d' \
+    --fail-on=marginal
+
+php artisan qr:batch tickets.csv --out=storage/tickets \
+    --name-column=code --format=pdf --profile=ticket --check
+```
+
+> [!NOTE]
+> The flag is `--symbol-version`, not `--version`, because Symfony's console
+> already owns the latter.
 
 ## All methods
 

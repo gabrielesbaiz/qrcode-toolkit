@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Gabrielesbaiz\QrcodeToolkit;
 
+use Gabrielesbaiz\QrcodeToolkit\Commands\BatchQrCommand;
+use Gabrielesbaiz\QrcodeToolkit\Commands\CheckQrCommand;
+use Gabrielesbaiz\QrcodeToolkit\Commands\ClearQrCommand;
+use Gabrielesbaiz\QrcodeToolkit\Commands\DoctorQrCommand;
+use Gabrielesbaiz\QrcodeToolkit\Commands\MakeQrCommand;
+use Gabrielesbaiz\QrcodeToolkit\Commands\ProfilesQrCommand;
 use Gabrielesbaiz\QrcodeToolkit\Support\CacheSpec;
 use Gabrielesbaiz\QrcodeToolkit\Support\LogoLoader;
 use Gabrielesbaiz\QrcodeToolkit\Support\RenderContext;
@@ -26,7 +32,15 @@ class QrcodeToolkitServiceProvider extends PackageServiceProvider
         $package
             ->name('qrcode-toolkit')
             ->hasConfigFile()
-            ->hasViews('qr');
+            ->hasViews('qr')
+            ->hasCommands([
+                MakeQrCommand::class,
+                CheckQrCommand::class,
+                BatchQrCommand::class,
+                DoctorQrCommand::class,
+                ProfilesQrCommand::class,
+                ClearQrCommand::class,
+            ]);
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Gabrielesbaiz\QrcodeToolkit\Exceptions\QrException;
 use Gabrielesbaiz\QrcodeToolkit\Geometry\Drawable;
 use Gabrielesbaiz\QrcodeToolkit\Support\MatrixContract;
+use Illuminate\Console\Command;
 
 arch('no debugging leftovers')
     ->expect(['dd', 'dump', 'ray', 'var_dump', 'die'])
@@ -22,6 +23,11 @@ arch('exceptions extend the package exception')
     ->expect('Gabrielesbaiz\QrcodeToolkit\Exceptions')
     ->toExtend(QrException::class)
     ->ignoring(QrException::class);
+
+arch('commands extend the Laravel command')
+    ->expect('Gabrielesbaiz\QrcodeToolkit\Commands')
+    ->toExtend(Command::class)
+    ->ignoring('Gabrielesbaiz\QrcodeToolkit\Commands\Concerns');
 
 arch('geometry is final')
     ->expect('Gabrielesbaiz\QrcodeToolkit\Geometry')

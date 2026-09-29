@@ -45,6 +45,11 @@ First release.
 - Birthdays on a contact card are normalised to ISO 8601 for vCard and to the
   compact form for MECARD, and an ambiguous date is refused rather than
   guessed at — Google Contacts silently drops a `BDAY` it cannot parse.
+- Six Artisan commands: `qr:doctor` (what this machine can render and which
+  PNG driver resolves, and why), `qr:check` (the readability report as a build
+  gate), `qr:make`, `qr:batch` (one code per CSV row), `qr:profiles` (which
+  draws a code in the terminal) and `qr:clear`. They share one set of styling
+  flags, so a look worked out in `qr:check` transfers to the others unchanged.
 - An immutable, `Macroable`, `Conditionable` builder implementing `Htmlable`,
   `Responsable` and `Stringable`.
 - A `<x-qr>` Blade component with attribute-to-option mapping, nested

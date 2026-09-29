@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace Gabrielesbaiz\QrcodeToolkit\Support;
 
 use Closure;
+use Illuminate\Cache\DatabaseStore;
+use Illuminate\Cache\FileStore;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Cache\Repository;
+use RuntimeException;
+use Throwable;
 
 /**
  * Where, and whether, a rendered code is cached.
@@ -39,6 +44,50 @@ final readonly class CacheSpec
             $this->prefix,
             $key ?? $this->key,
         );
+    }
+
+    /**
+     * The tag every cached code carries, where the store supports tags.
+     */
+    public const TAG = 'qrcode-toolkit';
+
+    /**
+     * Get the repository to read and write through.
+     *
+     * Tagged where the store allows it, so the codes can be purged on
+     * their own rather than by flushing the whole application cache.
+     */
+    public function repository(): Repository
+    {
+        $repository = $this->cache?->store($this->store);
+
+        if ($repository === null) {
+            throw new RuntimeException('No cache factory is bound.');
+        }
+
+        return $this->taggable($repository)
+            ? $repository->tags([self::TAG])
+            : $repository;
+    }
+
+    /**
+     * Determine whether the configured store can carry tags.
+     */
+    public function taggable(?Repository $repository = null): bool
+    {
+        $repository ??= $this->cache?->store($this->store);
+
+        if ($repository === null) {
+            return false;
+        }
+
+        try {
+            return method_exists($repository, 'tags')
+                && ! $repository->getStore() instanceof FileStore
+                && ! $repository->getStore() instanceof DatabaseStore;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     /**
