@@ -8,7 +8,9 @@ use Gabrielesbaiz\QrcodeToolkit\Exceptions\QrException;
 use Illuminate\Support\Str;
 
 /**
- * SEPA Credit Transfer payloads, EPC069-12, commonly called a GiroCode.
+ * SEPA Credit Transfer payloads, to the European Payments Council's
+ * EPC069-12. Commonly called a GiroCode, which is a brand of Die Deutsche
+ * Kreditwirtschaft for the German rollout rather than the standard's name.
  *
  * Twelve lines, separated by a bare line feed. CRLF here is a documented
  * cause of banking apps refusing the code, which is why the separator is
@@ -17,7 +19,7 @@ use Illuminate\Support\Str;
 final class Epc
 {
     /**
-     * The largest payload a GiroCode may carry.
+     * The largest payload an EPC payment code may carry.
      */
     public const MAX_BYTES = 331;
 

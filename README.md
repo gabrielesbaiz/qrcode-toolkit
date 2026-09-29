@@ -112,7 +112,7 @@ Checked on 2026-09-28 against each project's own source and documentation.
 | Caching | yes | — | — | — | no | yes | no | no | no |
 | Artisan command | **no** | — | — | — | no | **yes** | no | no | no |
 | Payload helpers | 8 | 0 | 0 | 0 | 6 | **13** | 0 | **13** | 0 |
-| SEPA GiroCode | **yes, IBAN validated** | no | no | no | no | no | no | no | no |
+| SEPA EPC payment code | **yes, IBAN validated** | no | no | no | no | no | no | no | no |
 | PHP floor | **8.2** | 8.1 | **8.4** | 8.2 | 7.2 | 8.2 | 8.2 | 8.3 | 8.1 |
 | Laravel | **11–13** | — | — | — | not required | 12–13 | 10–13 | via bridge | via Filament |
 
@@ -581,7 +581,10 @@ Coordinates are formatted independently of the active locale. Under `it_IT`,
 
 ### SEPA payments
 
-A GiroCode, to EPC069-12:
+An EPC payment code, to the European Payments Council's EPC069-12. Most
+people call it a GiroCode; that is Die Deutsche Kreditwirtschaft's brand for
+the German rollout rather than the name of the standard, which is why the
+method is `epc()`:
 
 ```php
 Qr::epc(
@@ -780,7 +783,7 @@ Qr::make($url)->oops();
 | `phone(string $number)` | `QrBuilder` | `tel:` |
 | `sms(string $number, ?string $message)` | `QrBuilder` | `SMSTO:` |
 | `geo(float $lat, float $lon, ?float $altitude, ?string $query)` | `QrBuilder` | `geo:` |
-| `epc(string $name, string $iban, ...)` | `QrBuilder` | SEPA GiroCode, IBAN validated |
+| `epc(string $name, string $iban, ...)` | `QrBuilder` | SEPA EPC payment code, IBAN validated |
 | `defaults()` | `array` | The resolved default options |
 | `profiles()` | `array` | The names of the configured profiles |
 
@@ -922,7 +925,7 @@ $builder->save(storage_path("app/print/brand-{$widthMm}mm.pdf"));
 </details>
 
 <details>
-<summary><b>A SEPA GiroCode on an invoice</b></summary>
+<summary><b>A SEPA payment code on an invoice</b></summary>
 
 ```php
 $qr = Qr::epc(

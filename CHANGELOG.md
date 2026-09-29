@@ -32,7 +32,8 @@ First release.
   URL scheme and PHP stream wrapper, checks the real media type against the
   claimed one, and guards against decompression bombs.
 - Payload helpers: `url`, `wifi`, `vcard` (vCard 3.0 or MECARD), `email`
-  (`mailto:` or `MATMSG:`), `phone`, `sms`, `geo`, and `epc` — a SEPA GiroCode
+  (`mailto:` or `MATMSG:`), `phone`, `sms`, `geo`, and `epc` — a SEPA EPC
+  payment code (EPC069-12, widely known by the German brand name GiroCode)
   with genuine mod-97 IBAN validation, enforced field limits and the
   specification's error-correction and logo rules.
 - An immutable, `Macroable`, `Conditionable` builder implementing `Htmlable`,
