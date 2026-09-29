@@ -1,6 +1,10 @@
+<p align="center">
+    <img src="art/qrcode-toolkit-logo.png" alt="QrcodeToolkit" width="600">
+</p>
+
 # QrcodeToolkit
 
-A QR code generator for Laravel that tells you what your styling costs — `dots` modules, a `leaf` eye, a gradient and a logo, and a report that says the code still has 71% of its error-correction budget left.
+A QR code generator for Laravel that tells you what your styling costs — `dots` modules, a `leaf` eye, a gradient and a logo, and a report that says the code still has 74.6% of its error-correction budget left.
 
 [![Latest version](https://img.shields.io/packagist/v/gabrielesbaiz/qrcode-toolkit.svg?style=flat-square)](https://packagist.org/packages/gabrielesbaiz/qrcode-toolkit)
 [![PHP](https://img.shields.io/packagist/dependency-v/gabrielesbaiz/qrcode-toolkit/php?style=flat-square)](composer.json)
@@ -77,7 +81,7 @@ Checked on 2026-09-28 against each project's own source and documentation.
 | Neighbour-aware rounding | **yes** | global roundness | — | — | — | — | — | — | — |
 | Eye shapes | **4** | 4 | 0 | — | 2 | 3 | 4 | — | 2 |
 | Per-eye colours | ring + pupil | **per eye** | no | per module type | no | yes | ? | ? | yes |
-| Gradients | linear, radial | **5 types** | no | SVG, hand-written | 5 types | 5 types | 5 types | 5 types | 5 types |
+| Gradients | **linear, any angle, plus radial** | 5 fixed presets | no | SVG, hand-written | 5 presets | 5 presets | 5 presets | 5 presets | 5 presets |
 | CMYK | **PDF + EPS** | **yes** | no | ? | no | **yes** | no | ? | no |
 | Logo | yes | no | yes | space only | PNG only | yes | yes | yes | yes |
 | Logo knock-out **before** shaping | **yes** | — | no | no | no | no | no | no | no |
@@ -111,8 +115,8 @@ Checked on 2026-09-28 against each project's own source and documentation.
 | Config + named profiles | **both** | — | — | — | no | config | no | config | no |
 | Caching | yes | — | — | — | no | yes | no | no | no |
 | Artisan command | **no** | — | — | — | no | **yes** | no | no | no |
-| Payload helpers | 8 | 0 | 0 | 0 | 6 | **13** | 0 | **13** | 0 |
-| SEPA EPC payment code | **yes, IBAN validated** | no | no | no | no | no | no | no | no |
+| Payload helpers | 9 forms | 0 | 0 | 0 | 6 | **12** | 0 | **13** | 0 |
+| SEPA EPC QR | **yes, IBAN validated** | no | no | no | no | no | no | no | no |
 | PHP floor | **8.2** | 8.1 | **8.4** | 8.2 | 7.2 | 8.2 | 8.2 | 8.3 | 8.1 |
 | Laravel | **11–13** | — | — | — | not required | 12–13 | 10–13 | via bridge | via Filament |
 
@@ -126,9 +130,52 @@ version 2, and its per-eye fills are more capable than this package's ring and
 pupil pair. If the styling you want is in its column, use it directly and skip
 the wrapper.
 
+**On the gradient row.** Counting types makes two look worse than five, and it
+is the wrong count. Bacon — and every wrapper that exposes it — offers five
+fixed presets: `VERTICAL`, `HORIZONTAL`, `DIAGONAL`, `INVERSE_DIAGONAL` and
+`RADIAL`. This package offers `linear` with an arbitrary angle, plus `radial`,
+and the four linear presets are exact points in that range:
+
+| Preset elsewhere | Here |
+|---|---|
+| `HORIZONTAL` | `gradient($from, $to, 'linear', 0)` |
+| `DIAGONAL` | `gradient($from, $to, 'linear', 45)` |
+| `VERTICAL` | `gradient($from, $to, 'linear', 90)` |
+| `INVERSE_DIAGONAL` | `gradient($from, $to, 'linear', 135)` |
+| `RADIAL` | `radialGradient($from, $to)` |
+
+So the five are a subset, and anything between them — 30°, 67.5°, 200° — is
+reachable here and is not reachable there. The trade is that a preset name is
+more discoverable than a number, which is why the four names appear in this
+table rather than only in the source.
+
 **Two projects ship more payload helpers than this one**, and one ships an
-Artisan command this one does not have. If you mainly need payload breadth,
-`Linkxtr/laravel-qrcode` and `2amigos/qrcode-library` are the better fit.
+Artisan command this one does not have. Counted from source on 2026-09-28,
+`Linkxtr/laravel-qrcode` has twelve types and `2amigos/qrcode-library`
+thirteen, against nine forms here. What they have and this does not:
+
+Seven overlap — email, geo, MeCard, phone, SMS, vCard and WiFi. Against
+`Linkxtr/laravel-qrcode` exactly **five** are missing, and none of them is
+unreachable: a payload is only a string, so `Qr::make()` encodes any of them
+today. The question is whether a named helper would earn its place.
+
+| Theirs, not ours | What the payload is | Reachable today | Worth a helper? |
+|---|---|---|---|
+| `CalendarEvent` | `BEGIN:VEVENT … END:VEVENT` | `Qr::make($vevent)` | **Yes** — dates, a timezone and escaping are real work |
+| `BTC` | `bitcoin:bc1q…?amount=0.001` | `Qr::make(…)` | Only if it checksums the address |
+| `Ethereum` | `ethereum:0x71C7…?value=1e18` | `Qr::make(…)` | Same reason |
+| `Telegram` | `https://t.me/laravelnews` | `Qr::url(…)` | No — it is a link |
+| `WhatsApp` | `https://wa.me/39…?text=Hello` | `Qr::url(…)` | No — it is a link |
+
+`2amigos/qrcode-library` adds `MMS`, `bookmark` and `YouTube` on top, all of
+which are the same shape of thing as the last two rows.
+
+Two go the other way, ours and not theirs: `Qr::url()`, and the **SEPA EPC QR
+with a validated IBAN**. So the scoreboard is twelve types against nine forms,
+of which exactly one — the calendar event — is a helper this package would
+genuinely benefit from. If you need payload breadth today, they are the better
+fit; if you need a payment code that fails on a bad IBAN before it prints, this
+one is.
 
 **`simplesoftwareio/simple-qrcode` is included for scale, not as a live
 option.** Its last release was February 2021 and its documentation domain now
@@ -579,12 +626,9 @@ Qr::geo(46.0693, 13.2358, query: 'Udine Castle');
 Coordinates are formatted independently of the active locale. Under `it_IT`,
 `sprintf('%f')` emits `46,0693` and silently corrupts the payload.
 
-### SEPA payments
+### SEPA EPC QR
 
-An EPC payment code, to the European Payments Council's EPC069-12. Most
-people call it a GiroCode; that is Die Deutsche Kreditwirtschaft's brand for
-the German rollout rather than the name of the standard, which is why the
-method is `epc()`:
+A SEPA EPC QR, to the European Payments Council's EPC069-12:
 
 ```php
 Qr::epc(
@@ -783,7 +827,7 @@ Qr::make($url)->oops();
 | `phone(string $number)` | `QrBuilder` | `tel:` |
 | `sms(string $number, ?string $message)` | `QrBuilder` | `SMSTO:` |
 | `geo(float $lat, float $lon, ?float $altitude, ?string $query)` | `QrBuilder` | `geo:` |
-| `epc(string $name, string $iban, ...)` | `QrBuilder` | SEPA EPC payment code, IBAN validated |
+| `epc(string $name, string $iban, ...)` | `QrBuilder` | SEPA EPC QR, IBAN validated |
 | `defaults()` | `array` | The resolved default options |
 | `profiles()` | `array` | The names of the configured profiles |
 
@@ -925,7 +969,7 @@ $builder->save(storage_path("app/print/brand-{$widthMm}mm.pdf"));
 </details>
 
 <details>
-<summary><b>A SEPA payment code on an invoice</b></summary>
+<summary><b>A SEPA EPC QR on an invoice</b></summary>
 
 ```php
 $qr = Qr::epc(

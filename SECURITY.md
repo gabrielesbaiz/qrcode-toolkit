@@ -28,7 +28,7 @@ In scope:
   identifiers.
 - A crafted logo that causes unbounded memory use or a crash rather than being
   refused.
-- An EPC payload that is built from invalid input without being rejected —
+- A SEPA EPC QR payload that is built from invalid input without being rejected —
   a failing IBAN checksum, a field over its limit, or both remittance forms
   at once.
 - HTTP responses that omit `nosniff`, the sandbox policy or the inline

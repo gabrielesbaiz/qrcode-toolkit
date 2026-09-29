@@ -226,11 +226,7 @@ final readonly class QrManager
     }
 
     /**
-     * Encode a SEPA credit transfer as an EPC069-12 payment code.
-     *
-     * Widely called a GiroCode, though that is Die Deutsche
-     * Kreditwirtschaft's brand for the German rollout rather than the name
-     * of the standard.
+     * Encode a SEPA credit transfer as an EPC QR, to EPC069-12.
      *
      * The specification requires error correction M and forbids anything
      * obscuring the symbol, so both are pinned here and the builder

@@ -200,7 +200,7 @@ final class QrBuilder implements Htmlable, Responsable, Stringable
     {
         if ($this->options->payloadKind === 'epc') {
             throw QrException::because(
-                'The EPC specification does not allow a logo over a payment code, because a bank app must be able to '
+                'The EPC specification does not allow a logo over a SEPA EPC QR, because a bank app must be able to '
                 .'read it first time. Render the logo beside the code instead.',
             );
         }
