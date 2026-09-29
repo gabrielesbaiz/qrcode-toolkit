@@ -23,6 +23,8 @@ final readonly class LayoutResult
      * @param  array<int, Shape|Polygon>  $body
      * @param  array<int, EyeRing>  $eyeRings
      * @param  array<int, Shape>  $pupils
+     * @param  array<int, array<int, Shape|Polygon>>  $eyeModules  ring modules, per eye
+     * @param  array<int, array<int, Shape|Polygon>>  $pupilModules  pupil modules, per eye
      * @param  array<int, string>  $warnings
      */
     public function __construct(
@@ -34,6 +36,8 @@ final readonly class LayoutResult
         public array $body,
         public array $eyeRings,
         public array $pupils,
+        public array $eyeModules,
+        public array $pupilModules,
         public ?Shape $logoRect,
         public ?Shape $logoBackgroundRect,
         public ?LabelBox $label,
@@ -79,7 +83,8 @@ final readonly class LayoutResult
     {
         return new self(
             $this->width, $this->height, $this->symbolX, $this->symbolY, $this->matrixSize,
-            $this->body, $this->eyeRings, $this->pupils, $this->logoRect, $this->logoBackgroundRect,
+            $this->body, $this->eyeRings, $this->pupils, $this->eyeModules, $this->pupilModules,
+            $this->logoRect, $this->logoBackgroundRect,
             $this->label, $this->frameRect, $this->options, $this->effectiveEcc, $this->modulesErased,
             [...$this->warnings, $warning],
         );

@@ -105,8 +105,13 @@ return [
         'module_scale' => 1.0,
 
         /*
-         * The three finder patterns: square, rounded, circle or leaf. The
-         * colours fall back to the foreground when left null.
+         * The three finder patterns: square, rounded, circle, leaf, pointy
+         * or module. A module eye is drawn out of individual modules in
+         * whatever shape the body uses, rather than as a ring with a hole.
+         *
+         * Each colour takes one value, or exactly three — one per finder
+         * pattern, top-left, top-right then bottom-left. Left null they
+         * fall back to the foreground.
          */
         'eyes' => 'square',
         'eye_color' => null,

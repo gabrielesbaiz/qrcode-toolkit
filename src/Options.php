@@ -43,6 +43,8 @@ final readonly class Options
     ];
 
     /**
+     * @param  string|array{0: string, 1: string, 2: string}|null  $eyeColor
+     * @param  string|array{0: string, 1: string, 2: string}|null  $eyeInnerColor
      * @param  array<string, Cmyk>  $cmyk
      */
     public function __construct(
@@ -59,8 +61,8 @@ final readonly class Options
         public ModuleStyle $modules = ModuleStyle::Square,
         public float $moduleScale = 1.0,
         public EyeStyle $eyes = EyeStyle::Square,
-        public ?string $eyeColor = null,
-        public ?string $eyeInnerColor = null,
+        public string|array|null $eyeColor = null,
+        public string|array|null $eyeInnerColor = null,
         public ?string $logo = null,
         public float $logoSize = 0.2,
         public float $logoPadding = 0.0,
@@ -112,8 +114,8 @@ final readonly class Options
             modules: $has('modules') ? Cast::enum(ModuleStyle::class, $options['modules'], 'modules') : ModuleStyle::Square,
             moduleScale: $has('module_scale') ? Cast::float($options['module_scale'], 'module_scale', 0.1, 1.0) : 1.0,
             eyes: $has('eyes') ? Cast::enum(EyeStyle::class, $options['eyes'], 'eyes') : EyeStyle::Square,
-            eyeColor: $has('eye_color') ? Color::normalize('eye_color', $options['eye_color']) : null,
-            eyeInnerColor: $has('eye_inner_color') ? Color::normalize('eye_inner_color', $options['eye_inner_color']) : null,
+            eyeColor: $has('eye_color') ? self::eyeColors('eye_color', $options['eye_color']) : null,
+            eyeInnerColor: $has('eye_inner_color') ? self::eyeColors('eye_inner_color', $options['eye_inner_color']) : null,
             logo: $has('logo') && is_string($options['logo']) ? $options['logo'] : null,
             logoSize: $has('logo_size') ? Cast::float($options['logo_size'], 'logo_size', 0.05, 0.3) : 0.2,
             logoPadding: $has('logo_padding') ? Cast::float($options['logo_padding'], 'logo_padding', 0.0, 4.0) : 0.0,
@@ -172,10 +174,13 @@ final readonly class Options
 
     /**
      * Get the colour the eye ring is painted.
+     *
+     * When the three eyes differ this is the first of them; renderers ask
+     * for the full list instead.
      */
     public function resolvedEyeColor(): string
     {
-        return $this->eyeColor ?? $this->foreground;
+        return $this->resolvedEyeColors()[0];
     }
 
     /**
@@ -183,7 +188,54 @@ final readonly class Options
      */
     public function resolvedEyeInnerColor(): string
     {
-        return $this->eyeInnerColor ?? $this->resolvedEyeColor();
+        return $this->resolvedEyeInnerColors()[0];
+    }
+
+    /**
+     * Get the ring colour of each of the three eyes, in finder order.
+     *
+     * Top-left, top-right, bottom-left. A single colour is repeated, so
+     * the common case costs nothing and the renderers have one shape of
+     * value to handle.
+     *
+     * @return array{0: string, 1: string, 2: string}
+     */
+    public function resolvedEyeColors(): array
+    {
+        if (is_array($this->eyeColor)) {
+            return $this->eyeColor;
+        }
+
+        $colour = $this->eyeColor ?? $this->foreground;
+
+        return [$colour, $colour, $colour];
+    }
+
+    /**
+     * Get the pupil colour of each of the three eyes, in finder order.
+     *
+     * @return array{0: string, 1: string, 2: string}
+     */
+    public function resolvedEyeInnerColors(): array
+    {
+        if (is_array($this->eyeInnerColor)) {
+            return $this->eyeInnerColor;
+        }
+
+        if ($this->eyeInnerColor !== null) {
+            return [$this->eyeInnerColor, $this->eyeInnerColor, $this->eyeInnerColor];
+        }
+
+        return $this->resolvedEyeColors();
+    }
+
+    /**
+     * Determine whether all three eyes share one ring and pupil colour.
+     */
+    public function eyesShareOneColour(): bool
+    {
+        return count(array_unique($this->resolvedEyeColors())) === 1
+            && count(array_unique($this->resolvedEyeInnerColors())) === 1;
     }
 
     /**
@@ -297,6 +349,40 @@ final readonly class Options
         if ($ratio < $this->minContrast) {
             throw QrException::insufficientContrast($ratio, $this->minContrast);
         }
+    }
+
+    /**
+     * Coerce an eye colour, which may be one colour or one per eye.
+     *
+     * Three is the only list length that means anything: there are three
+     * finder patterns, and a list of two would leave one eye undecided.
+     *
+     * @return string|array{0: string, 1: string, 2: string}
+     */
+    private static function eyeColors(string $key, mixed $value): string|array
+    {
+        if (! is_array($value)) {
+            return Color::normalize($key, $value);
+        }
+
+        if (count($value) !== 3) {
+            throw QrException::because(sprintf(
+                'Option [%s] takes one colour, or exactly three — one per finder pattern, '
+                .'top-left, top-right then bottom-left. Got %d.',
+                $key,
+                count($value),
+            ));
+        }
+
+        $values = array_values($value);
+
+        // Written out rather than looped so the three-element shape is
+        // provable rather than asserted.
+        return [
+            Color::normalize($key.'.0', $values[0]),
+            Color::normalize($key.'.1', $values[1]),
+            Color::normalize($key.'.2', $values[2]),
+        ];
     }
 
     /**

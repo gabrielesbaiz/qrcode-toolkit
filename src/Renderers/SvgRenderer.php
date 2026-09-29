@@ -78,26 +78,76 @@ final readonly class SvgRenderer implements Renderer
             );
         }
 
-        $rings = [];
+        $ringColours = $options->resolvedEyeColors();
+        $pupilColours = $options->resolvedEyeInnerColors();
+        $crisp = $options->prefersCrispEdges();
 
-        foreach ($layout->eyeRings as $ring) {
-            $rings[] = $ring['outer'];
-            $rings[] = $ring['cutout'];
+        if ($layout->eyeRings !== []) {
+            if ($options->eyesShareOneColour()) {
+                // One path for all three, which keeps the common case as
+                // small and as stable as it has always been.
+                $rings = [];
+
+                foreach ($layout->eyeRings as $ring) {
+                    $rings[] = $ring['outer'];
+                    $rings[] = $ring['cutout'];
+                }
+
+                $lines[] = sprintf(
+                    '  <path fill="%s" fill-rule="evenodd" d="%s"/>',
+                    $ringColours[0],
+                    $this->pathData(PathWriter::ops($rings), $crisp),
+                );
+            } else {
+                foreach ($layout->eyeRings as $index => $ring) {
+                    $lines[] = sprintf(
+                        '  <path fill="%s" fill-rule="evenodd" d="%s"/>',
+                        $ringColours[$index] ?? $ringColours[0],
+                        $this->pathData(PathWriter::ops([$ring['outer'], $ring['cutout']]), $crisp),
+                    );
+                }
+            }
         }
 
-        if ($rings !== []) {
+        foreach ($layout->eyeModules as $index => $shapes) {
+            if ($shapes === []) {
+                continue;
+            }
+
             $lines[] = sprintf(
-                '  <path fill="%s" fill-rule="evenodd" d="%s"/>',
-                $options->resolvedEyeColor(),
-                $this->pathData(PathWriter::ops($rings), $options->prefersCrispEdges()),
+                '  <path fill="%s" d="%s"/>',
+                $ringColours[$index] ?? $ringColours[0],
+                $this->pathData(PathWriter::ops($shapes), $crisp),
             );
         }
 
         if ($layout->pupils !== []) {
+            if ($options->eyesShareOneColour()) {
+                $lines[] = sprintf(
+                    '  <path fill="%s" d="%s"/>',
+                    $pupilColours[0],
+                    $this->pathData(PathWriter::ops($layout->pupils), $crisp),
+                );
+            } else {
+                foreach ($layout->pupils as $index => $pupil) {
+                    $lines[] = sprintf(
+                        '  <path fill="%s" d="%s"/>',
+                        $pupilColours[$index] ?? $pupilColours[0],
+                        $this->pathData(PathWriter::ops([$pupil]), $crisp),
+                    );
+                }
+            }
+        }
+
+        foreach ($layout->pupilModules as $index => $shapes) {
+            if ($shapes === []) {
+                continue;
+            }
+
             $lines[] = sprintf(
                 '  <path fill="%s" d="%s"/>',
-                $options->resolvedEyeInnerColor(),
-                $this->pathData(PathWriter::ops($layout->pupils), $options->prefersCrispEdges()),
+                $pupilColours[$index] ?? $pupilColours[0],
+                $this->pathData(PathWriter::ops($shapes), $crisp),
             );
         }
 

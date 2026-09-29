@@ -79,9 +79,9 @@ Checked on 2026-09-28 against each project's own source and documentation.
 | Module shapes | **6** | 3 | 0 | 2 | 3 | 3 | 5 | 3 | 3 |
 | `diamond` / capsule runs | **yes** | no | no | no | no | no | no | no | no |
 | Neighbour-aware rounding | **yes** | global roundness | — | — | — | — | — | — | — |
-| Eye shapes | **4** | 4 | 0 | — | 2 | 3 | 4 | — | 2 |
-| Per-eye colours | ring + pupil | **per eye** | no | per module type | no | yes | ? | ? | yes |
-| Gradients | **linear, any angle, plus radial** | 5 fixed presets | no | SVG, hand-written | 5 presets | 5 presets | 5 presets | 5 presets | 5 presets |
+| Eye shapes | **6** | 5 | 0 | — | 2 | 3 | 4 | — | 2 |
+| Per-eye colours | **ring and pupil, per eye** | per eye | no | per module type | no | yes | ? | ? | yes |
+| Gradients | **linear at any angle, radial** | 5 fixed presets | no | SVG, hand-written | 5 presets | 5 presets | 5 presets | 5 presets | 5 presets |
 | CMYK | **PDF + EPS** | **yes** | no | ? | no | **yes** | no | ? | no |
 | Logo | yes | no | yes | space only | PNG only | yes | yes | yes | yes |
 | Logo knock-out **before** shaping | **yes** | — | no | no | no | no | no | no | no |
@@ -292,18 +292,42 @@ breaks scanning outright, and shrinking the logo would make `logo_size` a lie.
 
 ### Eyes
 
-Four shapes, and the ring and pupil can be coloured separately:
+Six shapes:
 
 ```php
 Qr::make($url)->eyes('square');
 Qr::make($url)->eyes('rounded');
 Qr::make($url)->eyes('circle');
-Qr::make($url)->eyes('leaf');
+Qr::make($url)->eyes('leaf');    // two opposite corners rounded
+Qr::make($url)->eyes('pointy');  // one rounded corner, round pupil
+Qr::make($url)->eyes('module');  // the eye drawn out of modules
+```
 
+`module` is the interesting one: instead of a ring with a hole in it, the
+7×7 border and the 3×3 pupil are drawn as individual modules in whatever shape
+the body uses, so a dotted code gets dotted eyes and a rounded one gets rounded
+eyes that read their own neighbours.
+
+The ring and the pupil take a colour each:
+
+```php
 Qr::make($url)->eyes('rounded', '#1e1b4b', '#4338ca');
 ```
 
-Left unset, both colours fall back to the module colour.
+And each of the three finder patterns can differ, by passing exactly three —
+top-left, top-right, then bottom-left:
+
+```php
+Qr::make($url)->with([
+    'eyes' => 'rounded',
+    'eye_color' => ['#b91c1c', '#1d4ed8', '#15803d'],
+    'eye_inner_color' => '#0f172a',
+]);
+```
+
+A single colour is repeated across all three, and when all three match the
+renderer emits one path exactly as it always did. Left unset, both colours fall
+back to the module colour.
 
 ### Colours
 
@@ -591,6 +615,26 @@ Qr::vcard([
 ]);
 ```
 
+The card carries what Google Contacts and the iOS importer require:
+`BEGIN`/`END`, `VERSION:3.0` on the second line, both `N` with its five
+components and `FN`, CRLF endings, and one property per line with nothing
+folded.
+
+Birthdays are the one field worth care. Google Contacts silently drops a `BDAY`
+it cannot parse, so a locale-formatted date vanishes with no error anywhere.
+This package refuses it rather than guessing:
+
+```php
+Qr::vcard(['first' => 'Mario', 'last' => 'Rossi', 'birthday' => '12/03/1985']);
+// QrException: Birthday [12/03/1985] is ambiguous. Pass a DateTimeInterface,
+// or a string as YYYY-MM-DD, so that the day and the month cannot be read
+// the wrong way round.
+
+// Both accepted. Emitted as BDAY:1985-03-12 for vCard, BDAY:19850312 for MECARD.
+Qr::vcard([..., 'birthday' => '1985-03-12']);
+Qr::vcard([..., 'birthday' => new DateTimeImmutable('1985-03-12')]);
+```
+
 MECARD is around 40% shorter, which is often a whole symbol version at small
 print sizes:
 
@@ -847,7 +891,7 @@ Every setter returns a new builder; nothing mutates.
 | `gradient(string $from, string $to, GradientType\|string $type = 'linear', float $angle = 0.0)` | none | Spans the symbol |
 | `radialGradient(string $from, string $to)` | — | Sugar for the above |
 | `modules(ModuleStyle\|string $style, ?float $scale = null)` | `square`, `1.0` | Scale 0.1–1.0 |
-| `eyes(EyeStyle\|string $style, ?string $color = null, ?string $innerColor = null)` | `square` | Colours fall back to the foreground |
+| `eyes(EyeStyle\|string $style, ?string $color = null, ?string $innerColor = null)` | `square` | Six shapes; colours fall back to the foreground |
 | `logo(string $pathOrDataUri, ?float $size, ?float $padding, ?string $background)` | `0.2`, `0.0` | Raises ECC to H |
 | `label(string $text, ?int $size, ?string $color, ?string $font)` | `16`, `#000000` | Drawn under the code |
 | `frame(?string $color, ?float $width, ?float $radius)` | `#000000`, `1.0`, `0.0` | In modules |
@@ -884,9 +928,9 @@ Every key in `config/qrcode-toolkit.php`, with its default.
 | `defaults.gradient` | `null` | `['type', 'from', 'to', 'angle']` |
 | `defaults.modules` | `'square'` | Module shape |
 | `defaults.module_scale` | `1.0` | 0.1–1.0 |
-| `defaults.eyes` | `'square'` | Finder pattern shape |
-| `defaults.eye_color` | `null` | Falls back to the foreground |
-| `defaults.eye_inner_color` | `null` | Falls back to the eye colour |
+| `defaults.eyes` | `'square'` | `square`, `rounded`, `circle`, `leaf`, `pointy` or `module` |
+| `defaults.eye_color` | `null` | One colour, or three — one per finder pattern |
+| `defaults.eye_inner_color` | `null` | One colour, or three. Falls back to the eye colour |
 | `defaults.logo` | `null` | Local path or `data:` URI only |
 | `defaults.logo_size` | `0.2` | 0.05–0.3, a fraction of the symbol |
 | `defaults.logo_padding` | `0.0` | In modules |

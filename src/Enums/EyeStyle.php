@@ -18,6 +18,8 @@ enum EyeStyle: string
     case Rounded = 'rounded';
     case Circle = 'circle';
     case Leaf = 'leaf';
+    case Pointy = 'pointy';
+    case Module = 'module';
 
     /**
      * Get the corner radii of the 7x7 outer ring, in module units.
@@ -31,6 +33,10 @@ enum EyeStyle: string
             self::Rounded => [2.0, 2.0, 2.0, 2.0],
             self::Circle => [3.5, 3.5, 3.5, 3.5],
             self::Leaf => [3.5, 0.0, 3.5, 0.0],
+            // One rounded corner and three square ones, which is the
+            // shape people mean by a "pointy" eye.
+            self::Pointy => [3.5, 0.0, 0.0, 0.0],
+            self::Module => [0.0, 0.0, 0.0, 0.0],
         };
     }
 
@@ -50,6 +56,9 @@ enum EyeStyle: string
             self::Rounded => [1.25, 1.25, 1.25, 1.25],
             self::Circle => [2.5, 2.5, 2.5, 2.5],
             self::Leaf => [2.5, 0.0, 2.5, 0.0],
+            // A circular cut-out inside the pointed ring.
+            self::Pointy => [2.5, 2.5, 2.5, 2.5],
+            self::Module => [0.0, 0.0, 0.0, 0.0],
         };
     }
 
@@ -65,6 +74,8 @@ enum EyeStyle: string
             self::Rounded => [0.75, 0.75, 0.75, 0.75],
             self::Circle => [1.5, 1.5, 1.5, 1.5],
             self::Leaf => [1.5, 0.0, 1.5, 0.0],
+            self::Pointy => [1.5, 1.5, 1.5, 1.5],
+            self::Module => [0.0, 0.0, 0.0, 0.0],
         };
     }
 
@@ -74,5 +85,17 @@ enum EyeStyle: string
     public function isPureSquare(): bool
     {
         return $this === self::Square;
+    }
+
+    /**
+     * Determine whether the eye is drawn out of the module shape itself.
+     *
+     * A module eye is not a ring with a hole in it: the seven-by-seven
+     * border and the three-by-three pupil are drawn as individual modules
+     * in whatever shape the body uses, so a dotted code gets dotted eyes.
+     */
+    public function usesModules(): bool
+    {
+        return $this === self::Module;
     }
 }

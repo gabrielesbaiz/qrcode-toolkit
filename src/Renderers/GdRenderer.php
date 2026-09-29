@@ -182,8 +182,8 @@ final class GdRenderer implements Renderer
     private function drawEyes(GdImage $canvas, LayoutResult $layout, float $unit): void
     {
         $options = $layout->options;
-        $ring = $this->allocate($canvas, $options->resolvedEyeColor());
-        $pupil = $this->allocate($canvas, $options->resolvedEyeInnerColor());
+        $ringColours = $options->resolvedEyeColors();
+        $pupilColours = $options->resolvedEyeInnerColors();
 
         $transparent = $options->background === null;
 
@@ -191,7 +191,9 @@ final class GdRenderer implements Renderer
             ? $this->allocateTransparent($canvas)
             : $this->allocate($canvas, $options->background ?? '#ffffff');
 
-        foreach ($layout->eyeRings as $eye) {
+        foreach ($layout->eyeRings as $index => $eye) {
+            $ring = $this->allocate($canvas, $ringColours[$index] ?? $ringColours[0]);
+
             $this->fill($canvas, Rasteriser::points($eye['outer'], $unit), $ring);
 
             if ($transparent) {
@@ -205,8 +207,26 @@ final class GdRenderer implements Renderer
             }
         }
 
-        foreach ($layout->pupils as $shape) {
-            $this->fill($canvas, Rasteriser::points($shape, $unit), $pupil);
+        // Module eyes are drawn as modules rather than as a ring with a
+        // hole, so there is nothing to knock back out.
+        foreach ($layout->eyeModules as $index => $shapes) {
+            $ring = $this->allocate($canvas, $ringColours[$index] ?? $ringColours[0]);
+
+            foreach ($shapes as $shape) {
+                $this->fill($canvas, Rasteriser::points($shape, $unit), $ring);
+            }
+        }
+
+        foreach ($layout->pupils as $index => $shape) {
+            $this->fill($canvas, Rasteriser::points($shape, $unit), $this->allocate($canvas, $pupilColours[$index] ?? $pupilColours[0]));
+        }
+
+        foreach ($layout->pupilModules as $index => $shapes) {
+            $pupil = $this->allocate($canvas, $pupilColours[$index] ?? $pupilColours[0]);
+
+            foreach ($shapes as $shape) {
+                $this->fill($canvas, Rasteriser::points($shape, $unit), $pupil);
+            }
         }
     }
 

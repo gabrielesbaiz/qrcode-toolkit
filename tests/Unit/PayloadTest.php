@@ -172,3 +172,58 @@ it('validates the BIC when one is given', function (): void {
     expect(fn (): string => Epc::build('Acme', 'DE89370400440532013000', null, null, 'NOTABIC'))
         ->toThrow(QrException::class, 'BIC');
 });
+
+it('normalises a birthday to ISO for vCard and compact for MECARD', function (mixed $input, string $vcard, string $mecard): void {
+    expect(Payload::birthday($input))->toBe($vcard)
+        ->and(Payload::birthday($input, compact: true))->toBe($mecard);
+})->with([
+    'iso' => ['1985-03-12', '1985-03-12', '19850312'],
+    'basic' => ['19850312', '1985-03-12', '19850312'],
+    'object' => [new DateTimeImmutable('1985-03-12'), '1985-03-12', '19850312'],
+]);
+
+it('refuses a birthday whose day and month could be read either way round', function (): void {
+    // Google Contacts silently drops a BDAY it cannot parse, so guessing
+    // here would be a bug nobody notices until the wrong date is saved.
+    expect(fn (): string => Payload::birthday('12/03/1985'))
+        ->toThrow(QrException::class, 'ambiguous');
+});
+
+it('refuses a date that does not exist', function (): void {
+    expect(fn (): string => Payload::birthday('1985-13-45'))->toThrow(QrException::class, 'not a real date');
+});
+
+it('emits an importable BDAY in both card formats', function (): void {
+    expect(Payload::vcard(['first' => 'Mario', 'last' => 'Rossi', 'birthday' => '1985-03-12']))
+        ->toContain("\r\nBDAY:1985-03-12\r\n");
+
+    expect(Payload::mecard(['first' => 'Mario', 'last' => 'Rossi', 'birthday' => '1985-03-12']))
+        ->toContain('BDAY:19850312');
+});
+
+it('writes a vCard that satisfies what a contact importer requires', function (): void {
+    $card = Payload::vcard([
+        'first' => 'Mario', 'last' => 'Rossi', 'org' => 'Acme S.r.l.', 'title' => 'Developer',
+        'mobile' => '+393331234567', 'email' => 'mario.rossi@example.com',
+        'street' => 'Via Verdi 10', 'city' => 'Milano', 'region' => 'MI',
+        'postal_code' => '20121', 'country' => 'Italy', 'birthday' => '1985-03-12',
+    ]);
+
+    $lines = explode("\r\n", $card);
+
+    // The properties Google Contacts and the iOS importer both require.
+    expect($lines[0])->toBe('BEGIN:VCARD')
+        ->and($lines[1])->toBe('VERSION:3.0')
+        ->and(end($lines))->toBe('END:VCARD')
+        ->and($card)->toContain("\r\nFN:")
+        ->and($card)->toContain("\r\nN:");
+
+    // N carries exactly five semicolon-separated components.
+    $n = current(preg_grep('/^N:/', $lines));
+    expect(explode(';', substr((string) $n, 2)))->toHaveCount(5);
+
+    // Every line is a property; none is a bare continuation.
+    foreach ($lines as $line) {
+        expect($line)->toMatch('/^[A-Z][A-Z0-9-]*(;[^:]+)?:/');
+    }
+});

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gabrielesbaiz\QrcodeToolkit\Support;
 
+use DateTimeInterface;
 use Gabrielesbaiz\QrcodeToolkit\Exceptions\QrException;
 
 /**
@@ -153,10 +154,14 @@ final class Payload
             $lines[] = 'ADR;TYPE=WORK:;;'.implode(';', array_map(self::escapeVcard(...), $address));
         }
 
-        foreach (['url' => 'URL', 'birthday' => 'BDAY', 'note' => 'NOTE'] as $key => $property) {
+        foreach (['url' => 'URL', 'note' => 'NOTE'] as $key => $property) {
             if ($get($key) !== '') {
                 $lines[] = $property.':'.self::escapeVcard($get($key));
             }
+        }
+
+        if (isset($fields['birthday']) && $fields['birthday'] !== '') {
+            $lines[] = 'BDAY:'.self::birthday($fields['birthday'], compact: false);
         }
 
         $lines[] = 'END:VCARD';
@@ -207,10 +212,14 @@ final class Payload
             $parts[] = 'ADR:'.implode(',', $address);
         }
 
-        foreach (['url' => 'URL', 'birthday' => 'BDAY', 'note' => 'NOTE'] as $key => $field) {
+        foreach (['url' => 'URL', 'note' => 'NOTE'] as $key => $field) {
             if ($get($key) !== '') {
                 $parts[] = $field.':'.self::escapeMecard($get($key));
             }
+        }
+
+        if (isset($fields['birthday']) && $fields['birthday'] !== '') {
+            $parts[] = 'BDAY:'.self::birthday($fields['birthday'], compact: true);
         }
 
         return 'MECARD:'.implode(';', $parts).';;';
@@ -240,6 +249,46 @@ final class Payload
             ':' => '\\:',
             ',' => '\\,',
         ]);
+    }
+
+    /**
+     * Normalise a birthday to the form the card format requires.
+     *
+     * vCard wants ISO 8601, MECARD wants the same date without separators.
+     * A locale-formatted string is refused rather than guessed at: 12/03
+     * is the twelfth of March to half the world and the third of December
+     * to the other half, and a contact importer that silently takes the
+     * wrong one is worse than an exception. Google Contacts drops a BDAY
+     * it cannot parse, which is how this goes unnoticed.
+     */
+    public static function birthday(mixed $value, bool $compact = false): string
+    {
+        if ($value instanceof DateTimeInterface) {
+            return $value->format($compact ? 'Ymd' : 'Y-m-d');
+        }
+
+        if (! is_string($value) && ! is_int($value)) {
+            throw QrException::because('A birthday must be a DateTimeInterface or a date string in YYYY-MM-DD form.');
+        }
+
+        $raw = trim((string) $value);
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $m) === 1
+            || preg_match('/^(\d{4})(\d{2})(\d{2})$/', $raw, $m) === 1) {
+            [, $year, $month, $day] = $m;
+
+            if (! checkdate((int) $month, (int) $day, (int) $year)) {
+                throw QrException::because(sprintf('[%s] is not a real date.', $raw));
+            }
+
+            return $compact ? $year.$month.$day : $year.'-'.$month.'-'.$day;
+        }
+
+        throw QrException::because(sprintf(
+            'Birthday [%s] is ambiguous. Pass a DateTimeInterface, or a string as YYYY-MM-DD, '
+            .'so that the day and the month cannot be read the wrong way round.',
+            $raw,
+        ));
     }
 
     /**

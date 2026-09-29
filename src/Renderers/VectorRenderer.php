@@ -113,21 +113,56 @@ abstract class VectorRenderer implements Renderer
             $body .= $this->shapes($layout->body, $unit, evenOdd: false)."\n";
         }
 
-        $rings = [];
+        $ringColours = $options->resolvedEyeColors();
+        $pupilColours = $options->resolvedEyeInnerColors();
 
-        foreach ($layout->eyeRings as $ring) {
-            $rings[] = $ring['outer'];
-            $rings[] = $ring['cutout'];
+        if ($layout->eyeRings !== []) {
+            if ($options->eyesShareOneColour()) {
+                $rings = [];
+
+                foreach ($layout->eyeRings as $ring) {
+                    $rings[] = $ring['outer'];
+                    $rings[] = $ring['cutout'];
+                }
+
+                $body .= $this->color($layout, 'eye_color', $ringColours[0])."\n";
+                $body .= $this->shapes($rings, $unit, evenOdd: true)."\n";
+            } else {
+                foreach ($layout->eyeRings as $index => $ring) {
+                    $body .= $this->color($layout, 'eye_color', $ringColours[$index] ?? $ringColours[0])."\n";
+                    $body .= $this->shapes([$ring['outer'], $ring['cutout']], $unit, evenOdd: true)."\n";
+                }
+            }
         }
 
-        if ($rings !== []) {
-            $body .= $this->color($layout, 'eye_color', $options->resolvedEyeColor())."\n";
-            $body .= $this->shapes($rings, $unit, evenOdd: true)."\n";
+        foreach ($layout->eyeModules as $index => $shapes) {
+            if ($shapes === []) {
+                continue;
+            }
+
+            $body .= $this->color($layout, 'eye_color', $ringColours[$index] ?? $ringColours[0])."\n";
+            $body .= $this->shapes($shapes, $unit, evenOdd: false)."\n";
         }
 
         if ($layout->pupils !== []) {
-            $body .= $this->color($layout, 'eye_inner_color', $options->resolvedEyeInnerColor())."\n";
-            $body .= $this->shapes($layout->pupils, $unit, evenOdd: false)."\n";
+            if ($options->eyesShareOneColour()) {
+                $body .= $this->color($layout, 'eye_inner_color', $pupilColours[0])."\n";
+                $body .= $this->shapes($layout->pupils, $unit, evenOdd: false)."\n";
+            } else {
+                foreach ($layout->pupils as $index => $pupil) {
+                    $body .= $this->color($layout, 'eye_inner_color', $pupilColours[$index] ?? $pupilColours[0])."\n";
+                    $body .= $this->shapes([$pupil], $unit, evenOdd: false)."\n";
+                }
+            }
+        }
+
+        foreach ($layout->pupilModules as $index => $shapes) {
+            if ($shapes === []) {
+                continue;
+            }
+
+            $body .= $this->color($layout, 'eye_inner_color', $pupilColours[$index] ?? $pupilColours[0])."\n";
+            $body .= $this->shapes($shapes, $unit, evenOdd: false)."\n";
         }
 
         // The knock-out already removed the modules; painting the backing

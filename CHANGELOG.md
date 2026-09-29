@@ -9,7 +9,9 @@ First release.
 ### Added
 
 - Six module styles — `square`, `rounded`, `dots`, `diamond`, `vertical` and
-  `horizontal` — and four eye styles: `square`, `rounded`, `circle` and `leaf`.
+  `horizontal` — and six eye styles: `square`, `rounded`, `circle`, `leaf`,
+  `pointy` and `module`, the last drawing the finder pattern out of individual
+  modules so a dotted code gets dotted eyes.
   The capsule and diamond styles, and the frame, are additions to the shapes
   commonly available in PHP.
 - One geometry, computed once in module units, driving four output formats:
@@ -35,6 +37,12 @@ First release.
   (`mailto:` or `MATMSG:`), `phone`, `sms`, `geo`, and `epc` — a SEPA EPC QR
   (EPC069-12) with genuine mod-97 IBAN validation, enforced field limits and
   the specification's error-correction and logo rules.
+- Per-eye colours: `eye_color` and `eye_inner_color` each take one colour or
+  exactly three, one per finder pattern. A single colour still renders as one
+  path, so the common case is unchanged.
+- Birthdays on a contact card are normalised to ISO 8601 for vCard and to the
+  compact form for MECARD, and an ambiguous date is refused rather than
+  guessed at — Google Contacts silently drops a `BDAY` it cannot parse.
 - An immutable, `Macroable`, `Conditionable` builder implementing `Htmlable`,
   `Responsable` and `Stringable`.
 - A `<x-qr>` Blade component with attribute-to-option mapping, nested

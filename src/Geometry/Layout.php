@@ -86,8 +86,10 @@ final class Layout
             symbolY: $symbolY,
             matrixSize: $size,
             body: self::body($source, $options, $symbolX, $symbolY),
-            eyeRings: self::eyeRings($matrix, $options, $symbolX, $symbolY),
-            pupils: self::pupils($matrix, $options, $symbolX, $symbolY),
+            eyeRings: $options->eyes->usesModules() ? [] : self::eyeRings($matrix, $options, $symbolX, $symbolY),
+            pupils: $options->eyes->usesModules() ? [] : self::pupils($matrix, $options, $symbolX, $symbolY),
+            eyeModules: $options->eyes->usesModules() ? self::eyeModules($matrix, $options, $symbolX, $symbolY, ring: true) : [],
+            pupilModules: $options->eyes->usesModules() ? self::eyeModules($matrix, $options, $symbolX, $symbolY, ring: false) : [],
             logoRect: $logoRect,
             logoBackgroundRect: $options->logoBackground === null ? null : $logoRect,
             label: self::label($options, $width, $height, $frameWidth, $unit),
@@ -183,6 +185,121 @@ final class Layout
         }
 
         return $pupils;
+    }
+
+    /**
+     * Build an eye out of individual modules, in the body's own shape.
+     *
+     * The ring is the seven-by-seven border and the pupil the three-by-
+     * three centre, exactly as the specification draws a finder pattern —
+     * the only difference from the ring-and-cut-out styles is that each
+     * cell is drawn as a module, so a dotted code gets dotted eyes.
+     *
+     * @return array<int, array<int, Shape|Polygon>>
+     */
+    private static function eyeModules(Matrix $matrix, Options $options, float $ox, float $oy, bool $ring): array
+    {
+        $scale = $options->moduleScale;
+        $inset = (1.0 - $scale) / 2;
+        $eyes = [];
+
+        $cells = $ring ? self::ringCells() : self::pupilCells();
+
+        // A grid of just this eye's own cells, so the rounded style can
+        // read its neighbours here exactly as it does in the body.
+        $grid = array_fill(0, 7, array_fill(0, 7, false));
+
+        foreach ($cells as [$cx, $cy]) {
+            $grid[$cy][$cx] = true;
+        }
+
+        $local = Matrix::fromRows($grid);
+
+        foreach ($matrix->finderOrigins() as [$fx, $fy]) {
+            $shapes = [];
+
+            foreach ($cells as [$cx, $cy]) {
+                $left = $ox + $fx + $cx + $inset;
+                $top = $oy + $fy + $cy + $inset;
+
+                $shapes[] = match ($options->modules) {
+                    ModuleStyle::Dots => Shape::square($left, $top, $scale, $scale / 2),
+                    ModuleStyle::Diamond => Polygon::diamond($ox + $fx + $cx + 0.5, $oy + $fy + $cy + 0.5, $scale / 2, $scale / 2),
+                    ModuleStyle::Rounded => Shape::withRadii(
+                        $left, $top, $scale, $scale,
+                        self::localRadii($local, $cx, $cy, 0.5 * $scale),
+                    )->clampRadii(),
+                    default => new Shape($left, $top, $scale, $scale),
+                };
+            }
+
+            $eyes[] = $shapes;
+        }
+
+        return $eyes;
+    }
+
+    /**
+     * Corner radii for a cell inside an eye's own little grid.
+     *
+     * CornerResolver works against isBody(), which is false everywhere
+     * inside a finder pattern by design, so the eye brings its own grid.
+     *
+     * @return array{0: float, 1: float, 2: float, 3: float}
+     */
+    private static function localRadii(Matrix $grid, int $x, int $y, float $r): array
+    {
+        $up = $grid->isDark($x, $y - 1);
+        $down = $grid->isDark($x, $y + 1);
+        $left = $grid->isDark($x - 1, $y);
+        $right = $grid->isDark($x + 1, $y);
+
+        return [
+            ! $up && ! $left ? $r : 0.0,
+            ! $up && ! $right ? $r : 0.0,
+            ! $down && ! $right ? $r : 0.0,
+            ! $down && ! $left ? $r : 0.0,
+        ];
+    }
+
+    /**
+     * Get the cells of the seven-by-seven ring.
+     *
+     * @return array<int, array{0: int, 1: int}>
+     */
+    private static function ringCells(): array
+    {
+        $cells = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $cells[] = [$i, 0];
+            $cells[] = [$i, 6];
+        }
+
+        for ($i = 1; $i < 6; $i++) {
+            $cells[] = [0, $i];
+            $cells[] = [6, $i];
+        }
+
+        return $cells;
+    }
+
+    /**
+     * Get the cells of the three-by-three pupil.
+     *
+     * @return array<int, array{0: int, 1: int}>
+     */
+    private static function pupilCells(): array
+    {
+        $cells = [];
+
+        for ($y = 2; $y < 5; $y++) {
+            for ($x = 2; $x < 5; $x++) {
+                $cells[] = [$x, $y];
+            }
+        }
+
+        return $cells;
     }
 
     /**
