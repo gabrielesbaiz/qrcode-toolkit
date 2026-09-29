@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A style-first QR code toolkit for Laravel: six module shapes, six eye shapes, gradients, logos and frames, rendered to SVG, PNG, PDF and EPS from one geometry.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%23101010%27/%3E%3Cg fill=%27%23ffd400%27%3E%3Crect x=%274%27 y=%274%27 width=%278%27 height=%278%27/%3E%3Crect x=%2720%27 y=%274%27 width=%278%27 height=%278%27/%3E%3Crect x=%274%27 y=%2720%27 width=%278%27 height=%278%27/%3E%3Crect x=%2716%27 y=%2716%27 width=%274%27 height=%274%27/%3E%3Crect x=%2724%27 y=%2720%27 width=%274%27 height=%274%27/%3E%3Crect x=%2720%27 y=%2724%27 width=%274%27 height=%274%27/%3E%3C/g%3E%3C/svg%3E">
+<title>QrcodeToolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header id="top">
+  <div class="mx bar">
+    <a class="brand" href="#/home"><span class="glyph" aria-hidden="true"></span>QrcodeToolkit</a>
+    <span class="pill">v1.0.0</span>
+    <span class="spacer"></span>
+    <nav id="nav" aria-label="Documentation"></nav>
+    <button class="iconbtn" id="menubtn" aria-label="All pages" aria-expanded="false">☰ <span class="mlabel">All pages</span></button>
+    <button class="iconbtn" id="sbtn" aria-label="Search">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.5" stroke="currentColor"/><path d="M10.5 10.5 14 14" stroke="currentColor" stroke-linecap="round"/></svg>
+      Search <span id="skey">⌘K</span>
+    </button>
+    <button class="iconbtn" id="tbtn">Dark</button>
+  </div>
+  <div id="progress"></div>
+</header>
+
+<div id="menupanel" aria-label="All pages">
+  <div class="panelbox"><div class="panelbody"></div></div>
+</div>
+
+<div id="pal" role="dialog" aria-modal="true" aria-label="Search">
+  <div class="box">
+    <input id="pq" placeholder="Jump to a page or a section…" autocomplete="off" spellcheck="false">
+    <ul id="pl" role="listbox"></ul>
+  </div>
+</div>
+
+<main id="main"></main>
+
+<script src="app.js"></script>
+</body>
+</html>
